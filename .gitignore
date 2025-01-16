@@ -1,0 +1,11 @@
+config*.yml
+__pycache__/
+
+main.cmd
+main.exe
+main.build/
+
+rpgaiserver.log*
+src/rpgaiserver.log*
+
+test_playground.py

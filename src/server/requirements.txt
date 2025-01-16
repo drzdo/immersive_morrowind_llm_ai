@@ -1,0 +1,19 @@
+# core
+colorlog
+pathvalidate
+pydantic
+
+# stt
+vosk
+sounddevice
+azure-cognitiveservices-speech
+
+# tts
+mutagen
+elevenlabs
+
+# llm
+openai
+google-generativeai
+anthropic
+mistralai

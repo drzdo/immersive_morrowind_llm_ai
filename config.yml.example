@@ -1,0 +1,105 @@
+
+morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
+language: ru
+event_bus:
+  consumers: 30
+  producers: 30
+  system:
+    mwse_tcp:
+      encoding: cp1251
+      port: 18080
+    type: mwse_tcp
+llm:
+  system:
+    type: google
+
+    google:
+      api_key: ENTER_HERE
+      # model_name: gemini-1.5-flash
+      model_name: gemini-2.0-flash
+  llm_logger:
+    directory: D:\Games\immersive_morrowind_llm_logs
+    max_files: 300
+log:
+  log_to_console: true
+  log_to_console_level: info
+  log_to_file: true
+  log_to_file_level: debug
+rpc:
+  max_wait_time_sec: 5.0
+speech_to_text:
+  delayed_stop_sec: 0.5
+  system:
+    type: vosk
+
+    microsoft_speech:
+      key: ENTER_HERE
+      known_words: Морровинд,Вварденфелл,Кай,Косадес,Балмора,Сейда Нин,Селлус,Гравиус,Ганциэль,Дуар,Сокуциус,Эргалла,Тель,Мора
+      language: ru-RU
+      region: northeurope
+
+    vosk:
+      model_path: D:\Games\vosk-model-small-ru-0.22
+      device_index: 0
+text_to_speech:
+  sync_print_and_speak: false
+  output:
+    file_name_format: tts_{}.mp3
+    max_files_count: 15
+  ffmpeg:
+    path_to_ffmpeg_exe: D:\ffmpeg\bin\ffmpeg.exe
+    target_char_per_sec: 7
+  system:
+    type: elevenlabs
+    elevenlabs:
+      api_key: ENTER_HERE
+      language_code: ru
+      model_id: eleven_flash_v2_5
+      max_wait_time_sec: 10
+
+      voices:
+        d_male: ENTER_HERE
+        n_male: ENTER_HERE
+        i_male: ENTER_HERE
+        h_male: ENTER_HERE
+        k_male: ENTER_HERE
+        b_male: ENTER_HERE
+        a_male: ENTER_HERE
+        o_male: ENTER_HERE
+        r_male: ENTER_HERE
+        w_male: ENTER_HERE
+
+        d_female: ENTER_HERE
+        n_female: ENTER_HERE
+        i_female: ENTER_HERE
+        h_female: ENTER_HERE
+        k_female: ENTER_HERE
+        b_female: ENTER_HERE
+        a_female: ENTER_HERE
+        o_female: ENTER_HERE
+        r_female: ENTER_HERE
+        w_female: ENTER_HERE
+
+        socucius: ENTER_HERE
+database:
+  directory: D:\Games\immersive_morrowind_db
+npc_database:
+  max_stored_story_items: 250
+  max_used_in_llm_story_items: 50
+player_database:
+  max_stored_story_items: 200
+  book_name: Книга Путей
+  max_shown_story_items: 50
+npc_speaker:
+  release_before_end_sec: 4.0
+npc_director:
+  npc_max_phrases_after_player_hard_limit: 2
+  # npc_max_phrases_after_player_hard_limit: 10
+  strategy_random:
+      npc_phrases_after_player_min: 1
+      npc_phrases_after_player_max: 3
+      npc_phrases_after_player_min_proba: 0.5
+  random_comment_delay_sec: 60
+  random_comment_proba: 0.1
+  force_sheogorath_level: mad
+  can_include_player_in_sheogorath: never
