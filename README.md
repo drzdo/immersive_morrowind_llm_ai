@@ -16,8 +16,8 @@ Currently, mod supports only vanilla Morrowind MWSE (not OpenMW).
 How to set it up:
 
 - copy `mwse_mod` directory into `Data Files\MWSE`, or use mod organizer
-- prepare `config.yml`
-- run server
+- prepare `config.yml` (see below how)
+- run server (>= Python 3.12)
 
 ```sh
 D:\Python\Python312\python.exe .\src\server\main.py --config .\config.yml
@@ -112,6 +112,10 @@ for f in *.mp3; do echo "file '${PWD}/$f'" | sed 's/\/c\//C:\//'; done > /d/voic
 /d/ffmpeg/bin/ffmpeg.exe -ss 0 -t 300 -i /d/concat-${RACE}-full.mp3 -c:a copy /d/concat-${RACE}-trimmed.mp3
 ```
 
+This script gets all mp3 files in the folder you are in. If you are in `Data Files\Sound\Vo\d\m`, then it wlil list all mp3 voiced lines for Dunmer male. Then it merges them alltogether in a single long file, and then trims it to get the first 5 minutes. 5 minutes is good enough for ElevenLabs to operate.
+
+Adjust path to `ffmpeg.exe` in the script accordingly.
+
 3. Now, you need to create voices for each race and gender. Go to `Data Files\Sound\Vo`, and, say for dunmer male: `Data Files\Sound\Vo\d\m`, and run the command:
 
 ```sh
@@ -158,12 +162,48 @@ Restarting server during gameplay is OK.
 
 # FAQ
 
-Q: Can it be integrated with other games?
-A: In theory - yes. One would need to implement "game mod", and adjust "server side" accordingly.
+Can it be integrated with other games (Gothic, Fallout, etc)?\
+In theory - yes. One would need to implement "game mod", and adjust "server side" accordingly.
 
-# Some technical details
+Can it be integrated with OpenMW?\
+Currently - no, but technically possible. OpenMW Lua API should be extended to support everything what this mod requires. MWSE is simply superb in this regard as it provides a lot of possibilities. OpenMW can as well, but it needs to be implemented.
 
-Server is written in the way that integration of another LLM/STT/TTS system should be as transparent as possible.
+Can it be used with other languages?\
+Yes. It should be easy enough transition from the technical standpoint.
+
+Is it free?\
+The mod itself is opensource under GPLv3.\
+Google Gemini can be used for free if you do not reach limits.\
+Elevenlabs - you have to pay for it.\
+Vosk locally is free.
+
+Can another LLM/STT/TTS system get integrated?\
+Yes, it should be easy to do, feel free to check out the code.
+
+Can you introduce the code base a bit?\
+Yes. Let's take a look:
+```yml
+src
+    mwse_mod # integration with the Morrowind itself, written in Lua
+    server # server itself, written in Python (>= 3.12)
+        main.py # entrypoint
+        app # second after entrypoint which sets everything up
+        eventbus # implements communication between server and mwse_mod
+        game # the core part of the server
+            data # common data definitions
+            i18n # partial support for i18n, not 100% integrated
+            service # server is built upon multitude of services
+                npc_services # handles NPC actions
+                player_services # handles player actions
+                providers # some data providers
+                story_item # helpers
+        llm # abstracted out LLM proxy
+        stt # abstracted out STT proxy
+        tts # abstracted out TTS proxy
+```
+
+Can this be set up as a remote server?\
+Yes. It would require splitting server into two parts: local and remote. Local would be listening to the mic, and remote would be communicating with external backends (STT/TTS/LLM). Local part would communicate to the remote, and game would communicate to the local part.
 
 # Authors
 
