@@ -9,6 +9,10 @@ What it does in short:
 
 Be aware that description below requires a bit of a technical knowledge from the reader.
 
+# License
+
+GNU GPL v3
+
 # Basics
 
 Currently, mod supports only vanilla Morrowind MWSE (not OpenMW).
@@ -159,6 +163,134 @@ Stored data is 100% readable by a human. Check it out and play with it, tweak so
 
 Database is read upon starting the server. If you change something in the DB, restart the server.
 Restarting server during gameplay is OK.
+
+## Config examples
+
+Here example of my local config, with API keys stripped away:
+
+```yaml
+morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
+language: ru
+event_bus:
+  consumers: 30
+  producers: 30
+  system:
+    mwse_tcp:
+      encoding: cp1251
+      port: 18080
+    type: mwse_tcp
+llm:
+  system:
+    type: google
+
+    google:
+      api_key: AIzaSyCfV_0n8eJxtxS-8mL-<...>
+      # model_name: gemini-1.5-flash
+      model_name: gemini-2.0-flash
+  llm_logger:
+    directory: D:\Games\immersive_morrowind_llm_logs
+    max_files: 300
+log:
+  log_to_console: true
+  log_to_console_level: info
+  log_to_file: true
+  log_to_file_level: debug
+rpc:
+  max_wait_time_sec: 5.0
+speech_to_text:
+  delayed_stop_sec: 0.5
+  system:
+    type: vosk
+
+    microsoft_speech:
+      key: 81Iu7kzM24T35AhAZykW8SdREfAxrxE<...>
+      known_words: Морровинд,Вварденфелл,Кай,Косадес,Балмора,Сейда Нин,Селлус,Гравиус,Ганциэль,Дуар,Сокуциус,Эргалла,Тель,Мора
+      language: ru-RU
+      region: northeurope
+
+    vosk:
+      model_path: D:\Games\vosk-model-small-ru-0.22
+      device_index: 0
+text_to_speech:
+  sync_print_and_speak: false
+  output:
+    file_name_format: tts_{}.mp3
+    max_files_count: 15
+  ffmpeg:
+    path_to_ffmpeg_exe: D:\ffmpeg\bin\ffmpeg.exe
+    target_char_per_sec: 4
+    tempo_mul: 0.85
+  system:
+    type: elevenlabs
+    elevenlabs:
+      api_key: sk_6b9e37<...>
+      language_code: ru
+      model_id: eleven_flash_v2_5
+      max_wait_time_sec: 10
+
+      voices:
+        d_male: LvWai58<...>
+        n_male: K7WnR2j<...>
+        i_male: WTr0sj9<...>
+        h_male: d7Bl30c<...>
+        k_male: hxn5s9L<...>
+        b_male: vlIHT1xH<...>
+        a_male: anHhdfFs<...>
+        o_male: UVEi0xIa<...>
+        r_male: YFrX86uC<...>
+        w_male: wGxrLgF<...>
+
+        d_female: Ewh16Jh<...>
+        n_female: 5Evx5<...>
+        i_female: lCxYJ<...>
+        h_female: gUSChS<...>
+        k_female: uqm0t9<...>
+        b_female: 9BwM9Z<...>
+        a_female: 9484d5<...>
+        o_female: bOgn<...>
+        r_female: tbemlL<...>
+        w_female: DlY<...>
+
+        socucius: 4FOhR<...>
+database:
+  directory: D:\Games\immersive_morrowind_db
+npc_database:
+  max_stored_story_items: 250
+  max_used_in_llm_story_items: 50
+player_database:
+  max_stored_story_items: 200
+  book_name: Книга Путей
+  max_shown_story_items: 50
+npc_speaker:
+  release_before_end_sec: 2.5
+npc_director:
+  npc_max_phrases_after_player_hard_limit: 100
+  # npc_max_phrases_after_player_hard_limit: 10
+  strategy_random:
+      npc_phrases_after_player_min: 1
+      npc_phrases_after_player_max: 3
+      npc_phrases_after_player_min_proba: 0.5
+  random_comment_delay_sec: 60
+  random_comment_proba: 0.1
+  force_sheogorath_level: mad
+  can_include_player_in_sheogorath: never
+scene_instructions:
+  file: D:\Games\immersive_morrowind_manual_instructions.txt
+  encoding: cp1251
+```
+
+Here's example how to integrate an OpenAPI LLM:
+
+```yaml
+llm:
+  system:
+    type: openai
+
+    openai:
+      api_key: sk-proj-nHi39i9a0tom2R<...>
+      model_name: gpt-4o
+      base_url: https://api.openai.com/v1
+```
 
 # FAQ
 
