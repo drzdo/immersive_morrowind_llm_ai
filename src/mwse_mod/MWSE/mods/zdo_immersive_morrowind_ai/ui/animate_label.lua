@@ -39,7 +39,7 @@ function this.animate_label(req)
 
     timer.start({
         duration = 1.0 / char_per_sec,
-        type = timer.real,
+        type = timer.simulate,
         iterations = -1,
         persist = false,
         callback = function(e)

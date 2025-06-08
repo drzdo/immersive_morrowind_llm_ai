@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from eventbus.data.actor_ref import ActorRef
 from eventbus.data.actor_stats import ActorStats
@@ -31,7 +31,7 @@ class NpcAiConfig(BaseModel):
     barters_books: bool
     barters_enchanted_items: bool
 
-    travel_destinations: Optional[list[str]] = None
+    travel_destinations: Optional[list[str]] = Field(default=None)
 
 
 class NpcFactionData(BaseModel):
@@ -42,7 +42,7 @@ class NpcFactionData(BaseModel):
 
 class NpcCellData(BaseModel):
     id: str
-    name: Optional[str] = None
+    name: Optional[str] = Field(default=None)
 
 
 class NpcData(BaseModel):
@@ -50,22 +50,22 @@ class NpcData(BaseModel):
     name: str
     has_mobile: bool
 
-    female: bool
-    class_id: Optional[str] = None
-    class_name: Optional[str] = None
+    female: bool = Field(default=False)
+    class_id: Optional[str] = Field(default=None)
+    class_name: Optional[str] = Field(default=None)
 
     cell: NpcCellData
     npc_in_active_cell: bool
 
     player_distance: float
-    disposition: int
+    disposition: int = Field(default=50)
 
     is_diseased: bool
     in_combat: bool
     is_dead: bool
 
     is_ashfall_innkeeper: bool
-    ashfall_stew_cost: Optional[int] = None
+    ashfall_stew_cost: Optional[int] = Field(default=None)
 
     friendlies: list[ActorRef]
     hostiles: list[ActorRef]
@@ -74,15 +74,15 @@ class NpcData(BaseModel):
     nakedness: Nakedness
 
     health_normalized: float
-    race: IdWithName
+    race: Optional[IdWithName] = Field(default=None)
 
     weapon_drawn: bool
-    weapon: Optional[IdWithName] = None
+    weapon: Optional[IdWithName] = Field(default=None)
 
-    following: Optional[ActorRef] = None
+    following: Optional[ActorRef] = Field(default=None)
     position: Position
     ai_config: NpcAiConfig
 
-    faction: Optional[NpcFactionData] = None
-    stats: ActorStats
+    faction: Optional[NpcFactionData] = Field(default=None)
+    stats: Optional[ActorStats] = Field(default=None)
     gold: int

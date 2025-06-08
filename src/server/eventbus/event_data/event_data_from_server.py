@@ -90,6 +90,7 @@ class EventDataFromServer:
         type: Literal['npc_activate']
         npc_ref_id: str
         target_ref_id: str
+        target_pos: Optional[list[float]]
         dropped_item_id: Optional[int]
 
     class NpcDropItem(BaseModel):
@@ -108,7 +109,8 @@ class EventDataFromServer:
     class NpcTravel(BaseModel):
         type: Literal['npc_travel']
         npc_ref_id: str
-        target_ref_id: str
+        target_ref_id: Optional[str]
+        target_pos: Optional[list[float]]
 
     class TurnActorsTo(BaseModel):
         type: Literal['turn_actors_to']

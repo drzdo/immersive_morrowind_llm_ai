@@ -132,6 +132,10 @@ class StoryItemToHistoryConverter:
                     return ""
             case 'npc_come':
                 return f"({delta_str}{initiator} {"подошла" if initiator_female else "подошел"} к {target_dat})"
+            case 'npc_activate':
+                return ""
+            case 'npc_travel':
+                return ""
             case 'player_tells_to_shut_up':
                 return f"({delta_str}{initiator} попросил{a} всех замолчать)"
             case 'player_tells_to_stop_combat':

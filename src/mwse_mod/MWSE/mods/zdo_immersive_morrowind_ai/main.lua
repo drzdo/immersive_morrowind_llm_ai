@@ -28,15 +28,20 @@ function this.setup()
 
             e.timer:cancel()
 
+            local first_time_loaded = this.first_time_loaded
+
             if this.first_time_loaded then
                 this.first_time_loaded = false
                 util.log("Loaded " .. config.version)
 
                 player_service.setup()
                 env_service.setup()
-                npc_service.setup()
+            end
 
-                dialog.setup(this.first_time_loaded)
+            npc_service.setup(first_time_loaded)
+
+            if first_time_loaded then
+                dialog.setup(first_time_loaded)
                 hud.setup()
 
                 stt_service.setup(function()

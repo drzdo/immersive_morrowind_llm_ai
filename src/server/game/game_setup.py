@@ -10,6 +10,7 @@ from game.service.player_services.player_database import PlayerDatabase
 from game.service.player_services.player_personal_story_service import PlayerPersonalStoryService
 from game.service.providers.cell_name_provider import CellNameProvider
 from game.service.providers.dropped_items_provider import DroppedItemsProvider
+from game.service.scene.scene_instructions import SceneInstructions
 from game.service.util.text_sanitizer import TextSanitizer
 from util.logger import Logger
 from database.database import Database
@@ -91,11 +92,13 @@ class GameSetup:
 
         npc_database = NpcDatabase(config.npc_database, database)
 
+        scene_instructions = SceneInstructions(config.scene_instructions)
         system_instructions_builder = NpcLlmSystemInstructionsBuilder(
             player_provider, env_provider, dropped_items_provider,
-            cell_name_provider, i18n)
+            cell_name_provider, i18n, scene_instructions)
         npc_llm_response_producer = NpcLlmResponseProducer(llm, env_provider, system_instructions_builder, i18n)
-        pick_actor_service = NpcLlmPickActorService(config.npc_director, llm, env_provider, i18n, text_sanitizer)
+        pick_actor_service = NpcLlmPickActorService(config.npc_director, llm, env_provider, i18n, text_sanitizer,
+                                                    scene_instructions)
 
         npc_behavior_service = NpcBehaviorService(
             config.npc_database.max_used_in_llm_story_items, env_provider, pick_actor_service, npc_llm_response_producer,
@@ -107,7 +110,8 @@ class GameSetup:
 
         player_intention_analyzer = PlayerIntentionAnalyzer(llm)
         npc_intention_analyzer = NpcIntentionAnalyzer(
-            player_provider, npc_service, text_sanitizer, dropped_items_provider)
+            player_provider, npc_service, text_sanitizer, dropped_items_provider,
+            scene_instructions)
 
         event_producer_from_story = EventProducerFromStory(event_bus, player_provider, npc_service, i18n)
 

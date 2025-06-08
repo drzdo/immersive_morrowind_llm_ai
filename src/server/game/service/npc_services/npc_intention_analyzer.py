@@ -8,6 +8,7 @@ from game.service.npc_services.npc_service import NpcService
 from game.service.npc_services.npc_spawn_list import NPC_SPAWN_LIST
 from game.service.player_services.player_provider import PlayerProvider
 from game.service.providers.dropped_items_provider import DroppedItemsProvider
+from game.service.scene.scene_instructions import SceneInstructions
 from game.service.util.text_sanitizer import TextSanitizer
 from util.logger import Logger
 
@@ -15,11 +16,13 @@ from util.logger import Logger
 logger = Logger(__name__)
 
 class NpcIntentionAnalyzer:
-    def __init__(self, player_provider: PlayerProvider, npc_service: NpcService, text_sanitizer: TextSanitizer, dropped_item_provider: DroppedItemsProvider):
+    def __init__(self, player_provider: PlayerProvider, npc_service: NpcService, text_sanitizer: TextSanitizer, dropped_item_provider: DroppedItemsProvider,
+                 scene_instructions: SceneInstructions):
         self._player_provider = player_provider
         self._npc_service = npc_service
         self._text_sanitizer = text_sanitizer
         self._dropped_item_provider = dropped_item_provider
+        self._scene_instructions = scene_instructions
 
         self._emotional_triggers: dict[str, int] = {
             "trigger_like_conversation": +5,
@@ -77,6 +80,17 @@ class NpcIntentionAnalyzer:
 
         #
         text, data_list_wip = self._process_trigger_come(text, speaker_npc.actor_ref, npcs)
+        if len(data_list_wip) > 0:
+            result.extend(data_list_wip)
+        elif random.random() < 0.85 and target_ref:
+            result.append(StoryItemData.NpcCome(
+                type='npc_come',
+                initiator=speaker_npc.actor_ref,
+                target=target_ref
+            ))
+
+        #
+        text, data_list_wip = self._process_trigger_poi(text, speaker_npc.actor_ref, npcs)
         result.extend(data_list_wip)
 
         #
@@ -269,6 +283,33 @@ class NpcIntentionAnalyzer:
 
         return (text, result)
 
+    def _process_trigger_poi(self, text: str, speaker: ActorRef, npcs: list[Npc]):
+        result: list[StoryItemDataAlias] = []
+
+        poi_index = 0
+        for poi in self._scene_instructions.pois:
+            trigger = f"trigger_poi_{poi_index}"
+            if self._has_trigger(trigger=trigger, text=text):
+                text = self._delete_trigger_from_text(text=text, trigger=trigger)
+
+                match poi.type:
+                    case 'travel':
+                        result.append(StoryItemData.NpcTravel(
+                            type='npc_travel',
+                            initiator=speaker,
+                            destination=poi.pos
+                        ))
+                    case 'activate':
+                        result.append(StoryItemData.NpcActivate(
+                            type='npc_activate',
+                            initiator=speaker,
+                            target_ref_id=poi.ref_id,
+                            target_position=poi.pos
+                        ))
+
+            poi_index = poi_index + 1
+        return (text, result)
+
     def _process_trigger_come(self, text: str, speaker: ActorRef, npcs: list[Npc]):
         result: list[StoryItemDataAlias] = []
 
@@ -359,12 +400,16 @@ class NpcIntentionAnalyzer:
         # Model may decide to respond to the absent NPC - remove that answer tag.
         i0 = text.lower().find("trigger_answer_")
         if i0 >= 0:
-            i1 = text.find("000000", i0)
-            if i1 >= 0:
-                i2 = text.find(" ", i1)
-                if i2 >= 0:
-                    text = text[:i0] + text[i2:]
-                    text = text.strip()
+            ends = ["000000", " "]
+            for end in ends:
+                i1 = text.find(end, i0)
+                if i1 >= 0:
+                    i2 = text.find(" ", i1)
+                    if i2 >= 0:
+                        text = text[:i0] + text[i2:]
+                        text = text.strip()
+                        break
+
         return text
 
     def _determine_target_name_from_prefix_with_name(self, text: str, npcs: list[Npc]):

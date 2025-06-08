@@ -13,6 +13,7 @@ from game.service.util.text_sanitizer import TextSanitizer
 from util.colored_lines import green
 from util.logger import Logger
 from typing import Optional
+from pynput import keyboard
 
 from eventbus.event_consumer import EventConsumer
 from game.data.npc import Npc
@@ -79,12 +80,30 @@ class GameMaster:
         self._player_was_going_to_act_last_time = False
         self._last_shut_up_command_ms = 0
 
+        self._listener_k = keyboard.Listener(
+            on_press=self._handle_press,  # type: ignore
+            on_release=self._handle_release)  # type: ignore
+        self._pause_story_loop = False
+        self._listener_k.start()
+
         event_consumer.register_handler(self._handler)
 
         asyncio.get_event_loop().create_task(self._progress_story_loop())
 
     def start(self):
         self._player_story_service.publish_player_story()
+
+    def _handle_press(self, key: keyboard.Key):
+        if hasattr(key, 'vk') and key.__getattribute__('vk') == 96:  # NumPad0
+            self._pause_story_loop = not self._pause_story_loop
+            if self._pause_story_loop:
+                logger.info("Story progression PAUSED")
+            else:
+                self._npc_service.clear_cache()
+                logger.info("Story progression RESUMED")
+
+    def _handle_release(self, key):  # type: ignore
+        pass
 
     async def _progress_story_loop(self):
         while True:
@@ -94,6 +113,9 @@ class GameMaster:
                 continue
 
             if (now_ms() - self._last_shut_up_command_ms) < 5:
+                continue
+
+            if self._pause_story_loop:
                 continue
 
             await self._determine_npc_to_act_and_act()

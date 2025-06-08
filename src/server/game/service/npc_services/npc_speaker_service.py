@@ -311,11 +311,34 @@ class NpcSpeakerService:
             s_out = s_out + c_out
         return s_out
 
+    def _translit_ashkhan(self, text: str):
+        replaces = [
+            "ться", "ца",
+            "л", "ль",
+            "ы", "и",
+            "е", "и",
+            "ш", "щь",
+            "р", "рр",
+            "х", "хх"
+        ]
+        i = 0
+        while i < len(replaces):
+            src = replaces[i]
+            dst = replaces[i + 1]
+            text = text.replace(src, dst)
+            i = i + 2
+        return text
+
     async def _produce_voiceover(self, npc: Npc, text: str):
         text_processed = self._delete_non_verbal_comments(text)
 
-        if npc.personality.voice.translit:
-            text_processed = self._translit(text_processed)
+        match npc.personality.voice.accent:
+            case 'none':
+                pass
+            case 'translit':
+                text_processed = self._translit(text_processed)
+            case 'ashkhan':
+                text_processed = self._translit_ashkhan(text_processed)
 
         tts_request = TtsRequest(text=text_processed, voice=npc.personality.voice)
         tts_response = await self._tts.convert(tts_request)

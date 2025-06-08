@@ -51,6 +51,10 @@ class NpcStoryItemHelper:
                 return d.speaker
             case 'player_points_at_ref':
                 return d.speaker
+            case 'npc_activate':
+                return d.initiator
+            case 'npc_travel':
+                return d.initiator
 
         return None
 
@@ -103,6 +107,10 @@ class NpcStoryItemHelper:
                 pass
             case 'player_points_at_ref':
                 pass
+            case 'npc_activate':
+                return None
+            case 'npc_travel':
+                return None
 
         return None
 

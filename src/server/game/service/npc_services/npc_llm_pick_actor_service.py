@@ -11,6 +11,7 @@ from game.data.story_item import StoryItem, StoryItemData
 from game.i18n.i18n import I18n
 from game.service.npc_services.npc_llm_message_history_builder import NpcLlmMessageHistoryBuilder
 from game.service.providers.env_provider import EnvProvider
+from game.service.scene.scene_instructions import SceneInstructions
 from game.service.story_item.npc_story_item_helper import NpcStoryItemHelper
 from game.service.util.prompt_builder import PromptBuilder
 from game.service.util.text_sanitizer import TextSanitizer
@@ -49,7 +50,8 @@ class NpcLlmPickActorService:
         reason: str
         pass_reason_to_npc: bool
 
-    def __init__(self, config: Config, llm_system: LlmSystem, env_provider: EnvProvider, i18n: I18n, sanitizer: TextSanitizer) -> None:
+    def __init__(self, config: Config, llm_system: LlmSystem, env_provider: EnvProvider, i18n: I18n, sanitizer: TextSanitizer,
+                 scene_instructions: SceneInstructions) -> None:
         self._config = config
         self._llm_system = llm_system
         self._env_provider = env_provider
@@ -62,7 +64,13 @@ class NpcLlmPickActorService:
         self._prev_reason: str = ''
         self._random_comment_last_ms = now_ms()
 
+        self._scene_instructions = scene_instructions
+
     async def pick_npc_to_act(self, request: Request) -> Response:
+        manual_response = self._scene_instructions.get_next_manual_instruction_for_pick_npc(request.hearing_npcs)
+        if manual_response:
+            return NpcLlmPickActorService.Response(manual_response.actor_to_act, manual_response.reason, manual_response.pass_reason_to_npc)
+
         await self._main_session_lock.acquire()
         try:
             exclude_actors, total_said_after_player, last_said_story_item, sheogorath = self._gather_data_from_story_items(request)
@@ -306,7 +314,7 @@ class NpcLlmPickActorService:
             b.line(f"# Персонаж {b.get_option_index_and_inc()}: {d.name}")
             b.line(f"ID этого персонажа - '{d.ref_id}'.")
             b.sentence(
-                f"{"Женщина" if d.female else "Мужчина"} {d.race.name} по имени {d.name}. Класс {d.class_name}, уровень {d.stats.other.level}.")
+                f"{"Женщина" if d.female else "Мужчина"} {d.race and d.race.name} по имени {d.name}. Класс {d.class_name}, уровень {d.stats and d.stats.other.level}.")
 
             b.line(f"Вот предыстория {d.name}:")
             b.line(npc.personality.background)
@@ -328,23 +336,60 @@ class NpcLlmPickActorService:
 
         # EXAMPLES OF CUSTOM DIRECTOR INSTRUCTIONS
 
+                b.line(f"""## СЦЕНА
+Нереварин сразил Дагот Ура, и проклятие снято. Призрачный Предел пал.
+Нереварин прибыл к Вивеку, и у них случается разговор.
+""")
 #         b.line(f"""## СЦЕНА
-# Сейчас скрытой камерой снимается аналог развлекательной передачи "Дом 2" в мире Морровинда.
-# Фаргот знает, что Хрисскар отобрал у него кольцо.
-# Фаргот устал бояться и больше не будет это терпеть.
-# Хрисскар же - это типичный тупорылый вояка, который слабо склонен в эмпатию.
-# Все в трактире бухают, ругаются, пьют и искрометно шутят.
+# Айдис - проверяющая от гильдии бойцов, прибыла в детский сад с проверкой, всё ли в порядке в детском саду.
+# Губерон - писарь, он следует за Айдис и помогает ей в проверке.
+# Лормулг и Ваббар - воспитатели.
+# Все остальные - дети в детском саду.
+# Дети ведут себя непослушно и балуются.
+# Воспитатели пытаются все держать под контролем, чтобы Айдис ничего не заподозрила и не нашёл никаких проблем.
 
-# Твоя задача - срежисировать так, чтобы телепередача была искрометной, яркой и смешной.
+# Срежисируй эту сцену так, чтобы проверка была смешной и задорной.
+# """)
+#         b.line(f"""## СЦЕНА
+# Генерал имперского легиона, прибыл с проверкой с материка.
+# Он прибыл в форт лунной бабочки у Балморы, выстроил солдат на построение ночью вместе с их капитаном,
+# и даёт пиздюлей.
+# Он будет обращать внимание на всё, что в них не так: неправильная выправка, грязный меч, нечищенные сапоги,
+# запах мочи, пота, погнутый доспех, и всё остальное - придумай сам. Разъеб должен быт знатный.
+# Генерал будет отчитывать солдат и капитана.
+# Все обильно ругаются солдатским матом, но говорят кратко и по делу.
+
+# Срежисируй эту сцену так, чтобы досмотр солдат генералом был смешной и задорный.
 # """)
 
 #         b.line(f"""## СЦЕНА
-# Сейчас скрытой камерой снимается аналог развлекательной передачи "Дом 2" в мире Морровинда.
-# Фаргот знает, что Хрисскар отобрал у него кольцо.
-# Фаргот устал бояться и больше не будет это терпеть.
-# Хрисскар же - это типичный тупорылый вояка, который слабо склонен в эмпатию.
+# Кай Косадес развелся с Дульнеей Ралаал.
+# Передача "Фирология" на "Балмора ТВ" заканчивается.
+# Сейчас Кай идёт снова вступать в Имперский Легион, чтобы снова почувствовать клинок в руке,
+# ярость битвы и азарт напряжения.
+# Кай пришёл в форт возле Балморы чтобы обсудить вступление к Легион.
+# Все в форте знают, что Кай - бывший член Клинков, и его уважают.
 
-# Твоя задача - срежисировать так, чтобы телепередача была искрометной, яркой и смешной.
+# Срежисируй диалог Кая и служителей Легиона, чтобы он был веселым и увлекательным.
+# """)
+
+#         b.line(f"""## СЦЕНА
+# Дивайт Фир стал психологом, и начал набор пациентов на шоу "Фирология" на "Балмора ТВ".
+# К нему пришли Кай Косадес и Дульнея Ралаал на приём.
+
+# Губерон - представитель съемочной бригады. Все остальные - зрители передачи.
+
+# Кай Косадес и Дульнея Ралаал недавно поженились. Кай уволился из Клинков.
+# Спустя полгода у них в браке что-то пошло не так. У них много споров, недомолвок и разлада.
+# Не хватает открытой коммуникации, честности и точности.
+# Бытовые споры по поводу того, какие тарелки лучше - синие, которые красивые, или коричневые, которые прослужат дольше.
+# Спорят, куда класть доспехи от прежней службы Кая в Клинках, и прочее - придумай сам, что ещё было бы прикольным.
+
+# Дивайт Фир может перебивать и направлять диалог туда, куда нужно чтобы передача была как можно более интересной.
+
+# Твоя задача - срежисировать передачу так, чтобы она была интересной и смешной.
+
+# Передача уже подходит к концу. Сделай так, чтобы кто-то: либо Кай либо Дульнея приняли решение, о том, что они разводятся - этому должен предшествовать эпический диалог о том, что им друг в друге не нравится.
 # """)
 
 

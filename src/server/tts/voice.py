@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -10,9 +10,9 @@ class Voice(BaseModel):
         use_speaker_boost: bool = Field(default=True)
 
     speaker_ref_id: Optional[str] = None
-    race_id: str
+    race_id: Optional[str] = None
     female: bool
     pitch: float = Field(default=1.0)
-    translit: bool = Field(default=False)
+    accent: Literal['none', 'translit', 'ashkhan']
 
     elevenlabs: Elevenlabs

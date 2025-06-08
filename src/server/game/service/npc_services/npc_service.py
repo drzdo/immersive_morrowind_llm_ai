@@ -42,6 +42,9 @@ class NpcService:
 
         consumer.register_handler(self._handle_event)
 
+    def clear_cache(self):
+        self._ref_id_to_npc.clear()
+
     async def get_npc(self, npc_ref_id: str) -> Npc:
         while npc_ref_id in self._npc_ref_id_being_queried:
             await asyncio.sleep(1.0 / 30.0)
@@ -92,8 +95,8 @@ class NpcService:
         npcs: list[Npc] = []
         for actor in response.actors:
             if actor.actor_ref.type == 'creature':
-                # TODO: fix for Vivec and other guys
-                continue
+                if actor.actor_ref.ref_id not in ['vivec_god00000000']:
+                    continue
 
             if not actor.can_see and Distance.from_ingame_to_meters(actor.distance_ingame) > 3:
                 continue

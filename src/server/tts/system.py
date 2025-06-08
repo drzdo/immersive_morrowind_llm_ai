@@ -20,6 +20,7 @@ class TtsSystem:
         class Ffmpeg(BaseModel):
             path_to_ffmpeg_exe: str
             target_char_per_sec: int
+            tempo_mul: Optional[float] = Field(default=None)
 
         class Dummy(BaseModel):
             type: Literal['dummy']
@@ -59,6 +60,8 @@ class TtsSystem:
             logger.debug(f"Handling '{request.text}'")
             pitch = request.voice.pitch
             tempo = 1.0 / pitch  # to keep same duration
+            if self._config.ffmpeg.tempo_mul:
+                tempo = tempo * self._config.ffmpeg.tempo_mul
 
             logger.debug(f"Initial pitch={pitch} tempo={tempo}")
 

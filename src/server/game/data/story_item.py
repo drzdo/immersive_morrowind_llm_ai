@@ -79,6 +79,17 @@ class StoryItemData:
         initiator: ActorRef
         target: ActorRef
 
+    class NpcActivate(BaseModel):
+        type: Literal['npc_activate']
+        initiator: ActorRef
+        target_ref_id: str
+        target_position: list[float]
+
+    class NpcTravel(BaseModel):
+        type: Literal['npc_travel']
+        initiator: ActorRef
+        destination: list[float]
+
     class NpcDeath(BaseModel):
         type: Literal['npc_death']
         victim: ActorRef
@@ -157,6 +168,8 @@ StoryItemDataAlias: TypeAlias = Union[
     StoryItemData.ChangeDisposition,
     StoryItemData.NpcStartFollow,
     StoryItemData.NpcStopFollow,
+    StoryItemData.NpcActivate,
+    StoryItemData.NpcTravel,
     StoryItemData.NpcPickUpItem,
     StoryItemData.NpcAttack,
     StoryItemData.NpcCome,

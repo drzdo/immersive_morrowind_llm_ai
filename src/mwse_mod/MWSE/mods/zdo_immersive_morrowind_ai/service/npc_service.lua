@@ -55,7 +55,7 @@ function this.lerp_to_face_another_ref(ref, target, dt_sec)
     end
 
     local package = mobile.aiPlanner and mobile.aiPlanner:getActivePackage()
-    if package and package.isMoving then
+    if package and (package.isMoving or mobile.isWalking or mobile.isTurningLeft or mobile.isTurningRight)  then
         return
     end
 
@@ -157,35 +157,52 @@ function this.spawn_item(ref, target, data)
     end
 end
 
-function this.setup()
+function this.check_is_target_to_activate(target_ref, dropped_item_id, target_pos)
+    if target_ref == nil then
+        return nil
+    end
+
+    if (dropped_item_id and target_ref.data and target_ref.data["zdo_ai_dropped_item_id"] == dropped_item_id) then
+        util.log("Found target ref matches by dropped_item_id")
+        return target_ref
+    end
+
+    if (target_pos) then
+        local ref_pos = target_ref.position;
+
+        local dx = math.abs(ref_pos.x - target_pos[1])
+        local dy = math.abs(ref_pos.y - target_pos[2])
+        local dz = math.abs(ref_pos.z - target_pos[3])
+        if dx < 2 and dy < 2 and dz < 2 then
+            util.log("Found target ref matches by target_pos")
+            return target_ref
+        end
+    end
+
+    return nil
+end
+
+function this.setup(first_time_loaded)
     tes3.findGMST("iGreetDistanceMultiplier").value = 0
 
     this.npc_ref_id_to_audio_pitch = {}
     this.dropped_references = {}
 
-    event.register(tes3.event.simulate, function(e)
-        for ref_id, info in pairs(this.npc_ref_id_to_speaking_info) do
-            local ref = info["ref"]
-            local target = info["target"]
+    if first_time_loaded then
+        event.register(tes3.event.simulate, function(e)
+            for ref_id, info in pairs(this.npc_ref_id_to_speaking_info) do
+                local ref = info["ref"]
+                local target = info["target"]
 
-            if ref ~= tes3.mobilePlayer.reference then
-                this.lerp_to_face_another_ref(ref, target, e.delta)
+                if ref ~= tes3.mobilePlayer.reference and this.npc_ref_id_to_travel_info[ref.id] == nil then
+                    this.lerp_to_face_another_ref(ref, target, e.delta)
+                end
             end
-        end
-    end)
-    -- event.register(tes3.event.simulated, function(e)
-    --     for ref_id, info in pairs(this.npc_ref_id_to_speaking_info) do
-    --         local ref = info["ref"]
-    --         local target = info["target"]
-
-    --         if ref ~= tes3.mobilePlayer.reference then
-    --             this.lerp_to_face_another_ref(ref, target, e.delta)
-    --         end
-    --     end
-    -- end)
+        end)
+    end
 
     timer.start({
-        duration = 1.0,
+        duration = 0.5,
         type = timer.real,
         iterations = -1,
         persist = false,
@@ -199,10 +216,14 @@ function this.setup()
             end
 
             for ref_id, info in pairs(this.npc_ref_id_to_travel_info) do
+                local ref = info["ref"]
                 if info["expire_at_ms"] < now then
-                    this.npc_ref_id_to_speaking_info[ref_id] = nil
+                    this.npc_ref_id_to_travel_info[ref_id] = nil
+                    tes3.setAIWander({
+                        reference = ref,
+                        idles = {1, 1, 1, 1, 1, 1, 1, 1}
+                    })
                 else
-                    local ref = info["ref"]
                     local destination = info["destination"]
 
                     local package = ref.mobile.aiPlanner and ref.mobile.aiPlanner:getActivePackage()
@@ -210,7 +231,7 @@ function this.setup()
                         local distance = ref.position:distanceManhattan(destination)
                         local distance_to_stop = 64 * 5
                         if distance < distance_to_stop then
-                            this.npc_ref_id_to_speaking_info[ref_id] = nil
+                            this.npc_ref_id_to_travel_info[ref_id] = nil
                             tes3.setAIWander({
                                 reference = ref,
                                 idles = {1, 1, 1, 1, 1, 1, 1, 1}
@@ -221,6 +242,10 @@ function this.setup()
             end
         end
     })
+
+    if not first_time_loaded then
+        return
+    end
 
     event.register("zdo_ai_rpg:event_from_server", function(e)
         if e["data"]["type"] == "get_npc_request" then
@@ -309,45 +334,49 @@ function this.setup()
             })
         elseif e["data"]["type"] == "npc_travel" then
             local ref = tes3.getReference(e["data"]["npc_ref_id"])
-            local target = tes3.getReference(e["data"]["target_ref_id"])
 
             if ref and ref.mobile and ref.mobile.combatSession then
                 util.log("Skip come command because %s in combat", ref)
                 return
             end
 
-            this.npc_ref_id_to_travel_info[e["data"]["npc_ref_id"]] = {
-                expire_at_ms = util.now_ms() + 30000,
-                ref = ref,
-                target = target,
-                destination = target.position
-            }
+            local target = tes3.getReference(e["data"]["target_ref_id"])
+            local target_pos = e["data"]["target_pos"]
+            local final_target_position = (target and target.position) or tes3vector3.new(target_pos[1], target_pos[2], target_pos[3])
+            local distance = ref.position:distanceManhattan(final_target_position)
+            if distance > (64 * 1) then
+                this.npc_ref_id_to_travel_info[e["data"]["npc_ref_id"]] = {
+                    expire_at_ms = util.now_ms() + 30000,
+                    ref = ref,
+                    target = target,
+                    destination = final_target_position
+                }
 
-            tes3.setAITravel({
-                reference = ref,
-                destination = target.position
-            })
+                tes3.setAITravel({
+                    reference = ref,
+                    destination = final_target_position
+                })
+            end
         elseif e["data"]["type"] == "npc_activate" then
             local target_ref = nil
 
             util.log("Activating...")
-            if e["data"]["dropped_item_id"] then
+            if e["data"]["dropped_item_id"] or e["data"]["target_pos"] then
                 local target_ref_probably = tes3.getReference(e["data"]["target_ref_id"])
-                util.log("Found probable target ref %s for %d", target_ref_probably, e["data"]["dropped_item_id"])
+                -- util.log("Found probable target ref %s", target_ref_probably)
 
-                if (target_ref_probably and target_ref_probably.data["zdo_ai_dropped_item_id"] ==
-                    e["data"]["dropped_item_id"]) then
-
-                    util.log("Found probable target ref matches")
+                if this.check_is_target_to_activate(target_ref_probably, e["data"]["dropped_item_id"], e["data"]["target_pos"]) then
                     target_ref = target_ref_probably
-                else
+                end
+
+                if target_ref == nil then
                     util.log("Found probable target ref does not match")
 
                     if target_ref == nil then
                         local ref_in_list = tes3.mobilePlayer.cell.activators.head
                         while ref_in_list ~= nil do
-                            if ref_in_list.id == e["data"]["target_ref_id"] then
-                                if ref_in_list.data and ref_in_list.data["zdo_ai_dropped_item_id"] == e["data"]["dropped_item_id"] then
+                            if ref_in_list.id:lower() == e["data"]["target_ref_id"]:lower() then
+                                if this.check_is_target_to_activate(ref_in_list, e["data"]["dropped_item_id"], e["data"]["target_pos"]) then
                                     util.log("Found target ref via full iteration in activators")
                                     target_ref = ref_in_list
                                     break
@@ -361,9 +390,9 @@ function this.setup()
                     if target_ref == nil then
                         local ref_in_list = tes3.mobilePlayer.cell.statics.head
                         while ref_in_list ~= nil do
-                            if ref_in_list.id == e["data"]["target_ref_id"] then
-                                if ref_in_list.data and ref_in_list.data["zdo_ai_dropped_item_id"] == e["data"]["dropped_item_id"] then
-                                    util.log("Found target ref via full iteration in statics")
+                            if ref_in_list.id:lower() == e["data"]["target_ref_id"]:lower() then
+                                if this.check_is_target_to_activate(ref_in_list, e["data"]["dropped_item_id"], e["data"]["target_pos"]) then
+                                    util.log("Found target ref via full iteration in activators")
                                     target_ref = ref_in_list
                                     break
                                 end
@@ -744,14 +773,14 @@ function this.get_npc_data(ref_id)
 
     return {
         ref_id = ref_id,
-        name = npc.name,
+        name = (ref.data and ref.data["jamrockRename"]) or npc.name,
         health_normalized = npc_mobile and npc_mobile.health.normalized * 100 or 100,
         has_mobile = npc_mobile ~= nil,
 
         class_id = npc.class and npc.class.id,
         class_name = npc.class and npc.class.name,
         female = npc.female,
-        race = {
+        race = npc.race and {
             id = npc.race.id,
             name = npc.race.name
         },
@@ -796,7 +825,7 @@ function this.get_npc_data(ref_id)
             y = ref.position.y,
             z = ref.position.z
         },
-        ai_config = {
+        ai_config = npc.aiConfig and {
             offers_bartering = npc.aiConfig.offersBartering,
             offers_enchanting = npc.aiConfig.offersEnchanting,
             offers_repairs = npc.aiConfig.offersRepairs,
@@ -820,7 +849,7 @@ function this.get_npc_data(ref_id)
             barters_weapons = npc.aiConfig.bartersWeapons
         },
 
-        stats = actor_stats.get_actor_stats(npc_mobile),
+        stats = ref.mobile.objectType == tes3.objectType.mobileNPC and actor_stats.get_actor_stats(npc_mobile) or nil,
         gold = tes3.getItemCount({
             reference = ref,
             item = "gold_001"

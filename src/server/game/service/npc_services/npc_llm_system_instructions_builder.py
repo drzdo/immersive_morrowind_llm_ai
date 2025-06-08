@@ -8,6 +8,7 @@ from game.service.player_services.player_provider import PlayerProvider
 from game.service.providers.cell_name_provider import CellNameProvider
 from game.service.providers.dropped_items_provider import DroppedItemsProvider
 from game.service.providers.env_provider import EnvProvider
+from game.service.scene.scene_instructions import SceneInstructions
 from game.service.util.format_date import format_date
 from game.service.util.map_value_in_range import map_value_in_range
 from game.service.util.prompt_builder import PromptBuilder
@@ -21,12 +22,14 @@ logger = Logger(__name__)
 class NpcLlmSystemInstructionsBuilder():
     def __init__(self, player_provider: PlayerProvider, env_provider: EnvProvider,
                  dropped_items_provider: DroppedItemsProvider,
-                 cell_name_provider: CellNameProvider, i18n: I18n):
+                 cell_name_provider: CellNameProvider, i18n: I18n,
+                 scene_instructions: SceneInstructions):
         self._player_provider = player_provider
         self._env_provider = env_provider
         self._dropped_items_provider = dropped_items_provider
         self._cell_name_provider = cell_name_provider
         self._i18n = i18n
+        self._scene_instructions = scene_instructions
 
     def build(self, npc: Npc, other_npcs: list[Npc], messages: list[LlmMessage]) -> str:
         b = PromptBuilder()
@@ -50,7 +53,11 @@ class NpcLlmSystemInstructionsBuilder():
 
         b.line("""Ты - персонаж во вселенной игры Morrowind из Elder Scrolls.
 """)
-        b.line(f"Тебя зовут {d.name}, ты - {"женщина" if d.female else "мужчина"} расы {d.race.name}.")
+        race_name = d.race.name if d.race else "неизвестной"
+        if npc.actor_ref.ref_id == 'vivec_god00000000':
+            race_name = "каймер"
+
+        b.line(f"Тебя зовут {d.name}, ты - {"женщина" if d.female else "мужчина"} расы {race_name}.")
 
         b.paragraph()
         b.line("# ТВОЯ ПРЕДЫСТОРИЯ")
@@ -59,7 +66,8 @@ class NpcLlmSystemInstructionsBuilder():
         b.paragraph()
         b.line("# ИНФОРМАЦИЯ О ТЕБЕ")
         b.line(f"Класс персонажа - {d.class_name}")
-        self._sentence_with_top_skills(b, True, d.female, d.stats)
+        if d.stats:
+            self._sentence_with_top_skills(b, True, d.female, d.stats)
 
         if d.faction:
             b.line(f"{d.name} состоит во фракции {d.faction.faction_name}, твой ранг {d.faction.npc_rank}.")
@@ -247,8 +255,9 @@ class NpcLlmSystemInstructionsBuilder():
 
         b.line()
         b.sentence(
-            f"- В {round(distance_meters)} метров от {d.name} стоит {"женщина" if d2.female else "мужчина"} {d2.race.name} по имени {d2.name}")
-        b.sentence(f"У {him} уровень {d2.stats.other.level}, класс {d2.class_name}.")
+            f"- В {round(distance_meters)} метров от {d.name} стоит {"женщина" if d2.female else "мужчина"} {d2.race.name if d2.race else ""} по имени {d2.name}")
+        if d2.stats:
+            b.sentence(f"У {him} уровень {d2.stats.other.level}, класс {d2.class_name}.")
 
         disposition_to_other_npc = npc.behavior.relation_to_other_npc.get(other_npc.actor_ref.ref_id, 50)
         b.sentence(map_value_in_range(
@@ -275,7 +284,8 @@ class NpcLlmSystemInstructionsBuilder():
             hostiles = ", ".join(map(lambda a: a.name, d2.hostiles))
             b.sentence(f"{d.name} видит, что {d2.name} прямо сейчас сражается с {hostiles}.")
 
-        self._sentence_with_top_skills(b, False, d2.female, d2.stats)
+        if d2.stats:
+            self._sentence_with_top_skills(b, False, d2.female, d2.stats)
 
     def _sentence_with_top_skills(self, b: PromptBuilder, is_it_me: bool, female: bool, stats: ActorStats):
         l: list[str] = []
@@ -364,7 +374,7 @@ class NpcLlmSystemInstructionsBuilder():
         b.sentence(f"{him_her} уровень {p.stats.other.level}.")
         self._sentence_with_top_skills(b, False, p.female, p.stats)
 
-        if d.race.id == 'Dark Elf':
+        if d.race and d.race.id == 'Dark Elf':
             b.sentence(
                 f"{d.name} понимает, что {p.name} не отсюда: {p.name} чужестранец, н'вах, чужеземец, приезжий, понаехавший, неместный.")
 
@@ -689,6 +699,13 @@ class NpcLlmSystemInstructionsBuilder():
         for other_npc in other_npcs:
             b.line(
                 f"- если выбираешь говорить с {other_npc.actor_ref.name}, в начале ответа напиши 'trigger_answer_{other_npc.actor_ref.ref_id}'")
+
+        if len(self._scene_instructions.pois) > 0:
+            b.paragraph()
+            poi_index = 0
+            for poi in self._scene_instructions.pois:
+                b.line(f"- если выбираешь {poi.label}, напиши 'trigger_poi_{poi_index}'")
+                poi_index = poi_index + 1
 
         b.paragraph()
         if len(messages) > 0:

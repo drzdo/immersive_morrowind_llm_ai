@@ -10,6 +10,7 @@ from eventbus.rpc import Rpc
 from game.service.npc_services.npc_llm_pick_actor_service import NpcLlmPickActorService
 from game.service.npc_services.npc_speaker_service import NpcSpeakerService
 from game.service.player_services.player_database import PlayerDatabase
+from game.service.scene.scene_instructions import SceneInstructions
 from llm.system import LlmSystem
 from stt.system import SttSystem
 from tts.file_list_rotation import FileListRotation
@@ -30,6 +31,7 @@ class AppConfig(BaseModel):
     npc_database: NpcDatabase.Config
     npc_director: NpcLlmPickActorService.Config
     npc_speaker: NpcSpeakerService.Config
+    scene_instructions: SceneInstructions.Config | None
 
     @staticmethod
     def load_from_file(path: str):
@@ -105,5 +107,6 @@ class AppConfig(BaseModel):
                 random_comment_delay_sec=60,
                 random_comment_proba=0.1
             ),
-            npc_speaker=NpcSpeakerService.Config()
+            npc_speaker=NpcSpeakerService.Config(),
+            scene_instructions=None
         )

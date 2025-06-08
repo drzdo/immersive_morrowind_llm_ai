@@ -57,7 +57,27 @@ class EventProducerFromStory:
                             type='npc_activate',
                             npc_ref_id=data.initiator.ref_id,
                             target_ref_id=data.item_ref_id,
+                            target_pos=None,
                             dropped_item_id=data.dropped_item_id
+                        )
+                    )
+                elif data.type == 'npc_activate':
+                    event_data_to_send.append(
+                        EventDataFromServer.NpcActivate(
+                            type='npc_activate',
+                            npc_ref_id=data.initiator.ref_id,
+                            target_ref_id=data.target_ref_id,
+                            target_pos=data.target_position,
+                            dropped_item_id=None
+                        )
+                    )
+                elif data.type == 'npc_travel':
+                    event_data_to_send.append(
+                        EventDataFromServer.NpcTravel(
+                            type='npc_travel',
+                            npc_ref_id=data.initiator.ref_id,
+                            target_ref_id=None,
+                            target_pos=data.destination
                         )
                     )
                 elif data.type == 'npc_attack':
@@ -83,7 +103,8 @@ class EventProducerFromStory:
                         EventDataFromServer.NpcTravel(
                             type='npc_travel',
                             npc_ref_id=data.initiator.ref_id,
-                            target_ref_id=data.target.ref_id
+                            target_ref_id=data.target.ref_id,
+                            target_pos=None
                         )
                     )
                 elif data.type == 'npc_stop_follow':

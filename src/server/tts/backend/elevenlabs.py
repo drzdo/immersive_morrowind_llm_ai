@@ -173,6 +173,8 @@ class ElevenlabsTtsBackend(AbstractTtsBackend):
 
         if voice.speaker_ref_id == 'chargen class00000000' and cfg.socucius:
             return cfg.socucius
+        if voice.speaker_ref_id == 'vivec_god00000000':
+            return cfg.d_male
 
         if voice.race_id == 'Argonian':
             return cfg.a_female if voice.female else cfg.a_male
