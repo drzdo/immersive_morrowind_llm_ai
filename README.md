@@ -133,7 +133,7 @@ for f in *.mp3; do echo "file '${PWD}/$f'" | sed 's/\/c\//C:\//'; done > /d/voic
 /d/ffmpeg/bin/ffmpeg.exe -ss 0 -t 300 -i /d/concat-${RACE}-full.mp3 -c:a copy /d/concat-${RACE}-trimmed.mp3
 ```
 
-This script gets all mp3 files in the folder you are in. If you are in `Data Files\Sound\Vo\d\m`, then it wlil list all mp3 voiced lines for Dunmer male. Then it merges them alltogether in a single long file, and then trims it to get the first 5 minutes. 5 minutes is good enough for ElevenLabs to operate.
+This script gets all mp3 files in the folder you are in. If you are in `Data Files\Sound\Vo\d\m`, then it will list all mp3 voiced lines for Dunmer male. Then it merges them altogether in a single long file, and then trims it to get the first 5 minutes. 5 minutes is good enough for ElevenLabs to operate.
 
 Adjust path to `ffmpeg.exe` in the script accordingly.
 
@@ -205,7 +205,7 @@ Q. Can I upload this mod or changed version to the Nexus (or any other platform)
 A. Yes. Please include the link to this repository.
 
 Q. Is there a more user-friendly guide?\
-A. I encourage somebody from the communite to prepare it. If you do - please send me the link, I'll attach it here.
+A. I encourage somebody from the community to prepare it. If you do - please send me the link, I'll attach it here.
 
 Q. Can another LLM/STT/TTS system get integrated?\
 A. Yes, it should be easy to do, feel free to check out the code.
