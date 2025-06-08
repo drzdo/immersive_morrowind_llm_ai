@@ -9,7 +9,8 @@ What it does in short:
 
 You can even direct a conversation between NPCs, look into `scene_instructions.py`.
 
-*Для понимающих русский язык - вот плейлист с видосами, как это звучит и выглядит*: https://www.youtube.com/watch?v=AzXEMGyHnrY&list=PLMnNOtiaekqkUdzVFybvpACl9h3pCZYnq&index=15
+🍒 *Для говорящих по-русски - вот плейлист с видосами, как это звучит и выглядит*:\
+https://www.youtube.com/watch?v=AzXEMGyHnrY&list=PLMnNOtiaekqkUdzVFybvpACl9h3pCZYnq&index=15
 
 ![Screenshot_1](./docs/Screenshot_1.jpg)
 NPCs are talking to each other.
@@ -329,7 +330,7 @@ A. Yes, of course.
 Q. Can I upload this mod or changed version to the Nexus (or any other platform)?\
 A. Yes. Please include the link to this repository.
 
-Q. Is there a more user-friendly guide?
+Q. Is there a more user-friendly guide?\
 A. I encourage somebody from the communite to prepare it. If you do - please send me the link, I'll attach it here.
 
 Q. Can another LLM/STT/TTS system get integrated?\
