@@ -9,6 +9,16 @@ What it does in short:
 
 Be aware that description below requires a bit of a technical knowledge from the reader.
 
+![Screenshot_1](./docs/Screenshot_1.jpg)
+NPCs are talking to each other.
+
+![MWSE config menu](./docs/Screenshot_2.jpg)
+MWSE config menu.
+
+![MWSE config menu](./docs/Screenshot_3.jpg)
+Server application launched locally.
+
+
 # License
 
 GNU GPL v3
