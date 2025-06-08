@@ -28,6 +28,8 @@ I encourage somebody to prepare a more user-friendly guide :)
 
 GNU GPL v3
 
+Author: Dmitry Zganyaiko https://linkedin.com/in/zdooo
+
 # Basics
 
 Currently, mod supports only vanilla Morrowind MWSE (not OpenMW).
@@ -179,7 +181,63 @@ Stored data is 100% readable by a human. Check it out and play with it, tweak so
 Database is read upon starting the server. If you change something in the DB, restart the server.
 Restarting server during gameplay is OK.
 
-## Config examples
+# FAQ
+
+Q. Can it be integrated with other games (Gothic, Fallout, etc)?\
+A. In theory - yes. One would need to implement "game mod", and adjust "server side" accordingly.
+
+Q. Can it be integrated with OpenMW?\
+A. Currently - no, but technically possible. OpenMW Lua API should be extended to support everything what this mod requires. MWSE is simply superb in this regard as it provides a lot of possibilities. OpenMW can as well, but it needs to be implemented.
+
+Q. Can it be used with other languages?\
+A. Yes. It should be easy enough transition from the technical standpoint.
+
+Q. Is it free?\
+A. The mod itself is opensource under GPLv3.\
+Google Gemini can be used for free if you do not reach limits.\
+Elevenlabs - you have to pay for it.\
+Vosk locally is free.
+
+Q. Can I modify the mod, create a fork?\
+A. Yes, of course.
+
+Q. Can I upload this mod or changed version to the Nexus (or any other platform)?\
+A. Yes. Please include the link to this repository.
+
+Q. Is there a more user-friendly guide?\
+A. I encourage somebody from the communite to prepare it. If you do - please send me the link, I'll attach it here.
+
+Q. Can another LLM/STT/TTS system get integrated?\
+A. Yes, it should be easy to do, feel free to check out the code.
+
+Q. Can you introduce the code base a bit?\
+A. Yes. Let's take a look:
+```yml
+src
+    mwse_mod # integration with the Morrowind itself, written in Lua
+    server # server itself, written in Python (>= 3.12)
+        main.py # entrypoint
+        app # second after entrypoint which sets everything up
+        eventbus # implements communication between server and mwse_mod
+        game # the core part of the server
+            data # common data definitions
+            i18n # partial support for i18n, not 100% integrated
+            service # server is built upon multitude of services
+                npc_services # handles NPC actions
+                player_services # handles player actions
+                providers # some data providers
+                story_item # helpers
+        llm # abstracted out LLM proxy
+        stt # abstracted out STT proxy
+        tts # abstracted out TTS proxy
+```
+
+Q. Can this be set up as a remote server?\
+A. Yes. It would require splitting server into two parts: local and remote. Local would be listening to the mic, and remote would be communicating with external backends (STT/TTS/LLM). Local part would communicate to the remote, and game would communicate to the local part.
+
+# Examples
+
+## Config example
 
 Here example of my local config, with API keys stripped away:
 
@@ -307,60 +365,179 @@ llm:
       base_url: https://api.openai.com/v1
 ```
 
-# FAQ
+## Directing
 
-Q. Can it be integrated with other games (Gothic, Fallout, etc)?\
-A. In theory - yes. One would need to implement "game mod", and adjust "server side" accordingly.
+With this mod, you can direct a scene, conversation between NPCs with a script with simple instructions.
 
-Q. Can it be integrated with OpenMW?\
-A. Currently - no, but technically possible. OpenMW Lua API should be extended to support everything what this mod requires. MWSE is simply superb in this regard as it provides a lot of possibilities. OpenMW can as well, but it needs to be implemented.
 
-Q. Can it be used with other languages?\
-A. Yes. It should be easy enough transition from the technical standpoint.
+<details>
+<summary>Here's example of a scene directing instructions for the first section of this video https://www.youtube.com/watch?v=AzXEMGyHnrY (Imperial General checks out the fort)</summary>
 
-Q. Is it free?\
-A. The mod itself is opensource under GPLv3.\
-Google Gemini can be used for free if you do not reach limits.\
-Elevenlabs - you have to pay for it.\
-Vosk locally is free.
+```ini
+poi travel,уйти домой,-6145,-18464,994
+poi activate,уйти внутрь форта,-5062,-18124,1096,ex_imp_loaddoor_03
+poi activate,уйти играть в нарды,-4473.43,-17797.74,1242.98,Ex_imp_loaddoor_02
 
-Q. Can I modify the mod, create a fork?\
-A. Yes, of course.
+капитан всс скажи, что генерал прибыл сюда с проверкой. Представь генерала легионерам.
+генерал подойти к капитану, всс поздоровайся и поприветствуй солдат. Скажи, что пришел всех разъебывать.
+капитан подойди к михалычу и всс представь его
+капитан подойди к наташе и всс представь ее
+капитан подойди к генералу, всс представь оставшихся солдат и спроси генерала что тот думает
+ашхан всс поприветствуй генерала здравия желаю блять и скажи что-нибудь эдакое
+генерал всс прокомментируй беспорядок в рядах и слабось выправки
 
-Q. Can I upload this mod or changed version to the Nexus (or any other platform)?\
-A. Yes. Please include the link to this repository.
+hold
+генерал подойди к вите, спроси а хули эльф делает в легионе, пусть он магию свою кастует в башнях, где маги дрыщи геморрой насиживают за книжками
+капитан всс ответить, что витя охуенный боец
+витя всс ответь, что ты вертел всю магию, и ты всю жизнь хотел быть босмером, чтобы стрелять из лука. всс скажи что генерал нвах и что вам тут виднее в морровинде как надо дела делать. в киродииле все блять блестит и сверкает, а в вварденфелле сука пепел ебучий в ноздри лезет
 
-Q. Is there a more user-friendly guide?\
-A. I encourage somebody from the communite to prepare it. If you do - please send me the link, I'll attach it here.
+hold
+капитан всс прикажи вите блять чтобы он не называл генерала нвахом, что это за блятство
+генерал всс ответь, что субординацию надо подддерживать, однако то что генерал нвах это правда, ведь он из киродиила
+капитан всс скажи, а вообще что твои бойцы самые отборные и лучшие, хоть и чуть странные
+генерал всс спроси, а что наташа женщина делает в легионе, ей бы кашу готовить дома
+наташа всс ответь, что ты кашу готовила, но нихуя не получается и всегда пригорает. никто в замуж не берет, поэтому ты в легион пошла.
 
-Q. Can another LLM/STT/TTS system get integrated?\
-A. Yes, it should be easy to do, feel free to check out the code.
+hold
+петя всс скажи что ты ебал такую проверки и такую сдужбу, лучше блять в хлаалу работать, там хоть деньги платят нормальные и не ебут бестолку
+петя уйди внутрь форта и добавь к ответу trigger_poi_1
+генерал подойди к капитану, всс пошли его НАХУЙ, скажи, что это сброд, и так нельзя
+капитан ответь, что пусть генерал сам блять покомандует
+ашхан всс скажи, что ты впервые видишь генерала живого, пиздец как ты рад
 
-Q. Can you introduce the code base a bit?\
-A. Yes. Let's take a look:
-```yml
-src
-    mwse_mod # integration with the Morrowind itself, written in Lua
-    server # server itself, written in Python (>= 3.12)
-        main.py # entrypoint
-        app # second after entrypoint which sets everything up
-        eventbus # implements communication between server and mwse_mod
-        game # the core part of the server
-            data # common data definitions
-            i18n # partial support for i18n, not 100% integrated
-            service # server is built upon multitude of services
-                npc_services # handles NPC actions
-                player_services # handles player actions
-                providers # some data providers
-                story_item # helpers
-        llm # abstracted out LLM proxy
-        stt # abstracted out STT proxy
-        tts # abstracted out TTS proxy
+hold
+генерал подойди к ашхану,всс похвали бойца за бойкий нрав. Но потом принюхайся, и всс разъеби его за запах - будто он не мылся блять месяц.
+генерал подойди к капитану и спроси, а хули бойцы воняют, у вас есть бани или нет?
+капитан всс ответь, что ты вообще не в курсе, что ты дома купаешься в теплой ванной.
+наташа всс скажи, что наконец то блять кто-то интересуется бойцама по настоящему, а то ведь не моются они неделями.
+саша всс скажи, что капитан бульба не живет жизнью части пес, в ванне блять купается
+генерал всс отметь, что это пиздец, бульба какого хуя
+
+hold
+ашхан всс порадуйся что бля мыться будете наконец-то ура
+саша всс скажи, что может капитану лучше принести своего пенистого мыла своим солдатам, а ты хули он зажимает его
+генерал всс ответь, что солдатам не пристало нежиться, и пользоваться мылом с пеной. но один раз в честь того, что генерал приехал - можно.
+капитан всс ответь, что бля ладно сейчас принесешь мыла
+
+hold
+генерал всс скажи, что ты заебался пиздец с такими солдафонами
+генерал всс скажи, что ты уходишь нахуй в форт и добавь в ответе trigger_poi_1
+капитан всс скажи, что ты заебался и уходишь нахуй домой купаться в ванной и добавь в ответе trigger_poi_0
+
+hold
+ашхан всс предложи всем выпить и поставь 3 бутылки бренди
+витя всс скажи, что это пиздец и ты пойдешь служить в хлаалу
+наташа всс скажи, что пойдешь с орком бухать, нахер такую службу
+
+hold
+витя всс скажи, что ты идешь спать и добавь в ответ trigger_poi_2
+наташа всс скажи, что ты идешь бухать с орком, все равно генерал до утра не явится и добавь в ответ trigger_poi_2
+ашхан всс скажи, что ты тебе генерал понравился, может его позвать бухать? Да не ладно, без него обойдемся и добавь в ответ trigger_poi_2
+саша всс скажи, во пиздец легион, куда я попал, пойду спать и добавь к ответу trigger_poi_1
+
+наташа всс скажи, что ты пойдешь сашку найдешь
+наташа добавь к ответу trigger_poi_1
+ашхан всс эх наташка ну пойду я с тобой и в ответ добавь trigger_poi_1
 ```
+</details>
 
-Q. Can this be set up as a remote server?\
-A. Yes. It would require splitting server into two parts: local and remote. Local would be listening to the mic, and remote would be communicating with external backends (STT/TTS/LLM). Local part would communicate to the remote, and game would communicate to the local part.
 
-# Authors
 
-Dmitry Zganyaiko https://linkedin.com/in/zdooo
+
+<details>
+<summary>Here's example of a scene directing instructions for the forth section of this video https://www.youtube.com/watch?v=AzXEMGyHnrY (Krassius Kurio, and Suran's brothel)</summary>
+poi activate,зайти внутрь,53577,-49737,315,hlaalu_loaddoor_02
+poi travel,подойти к бару,-274,-274,7
+poi travel,подойти посмотреть на танцовщиц,268,-248,7
+poi travel,стать в центре комнаты,-24,-262,7
+poi activate,выйти наружу,-256,128,128,in_hlaalu_loaddoor_01
+
+курио всс скажи, ну что Губерончик, что давно уже спонсируешь школу искусств в Суране и что пришло время проверить, хули там происходит в этой школе.
+курио всс скажи ну давай, заходим в дверь в школу, и добавь trigger_poi_0
+
+hold
+
+курио всс подойди к бару и осмотри происходящее. Тут танцуют три почти голые танцовщицы, кругом разбросана скума, и пахнет травкой - всс прокомментируй это. Скажи, что ты охереваешь.
+хельвиан всс поздоровайся с Курио и скажи, что он был её самый лучший учитель искусств, и что вот она теперь тут зарабатывает.
+курио всс спроси, а что что это за хиньярси такая стоит?
+хиньярси всс скажи, что местные любят канджиток, вот я тут тоже зарабатываю стою
+
+hold
+
+курио всс так ну давайте посмотрим и добавь trigger_poi_2
+курио всс прокомментируй красоток, скажи что тебе особенно нравится черненькая Каминда, ух шоколадка
+курио всс поговори с местными посетителями
+
+hold
+
+курио всс скажи, что ты вообще не такое спонсировал, и ожидал тут увидеть... нечто более... привычное
+руна всс ответь, что обычное искусство ныне дешево стоит, особенно когда много нвахов понаехало - все хотят простого и чтобы цепляло с первого раза
+
+hold
+
+курио всс скажи, что кстати, у тебя ведь есть пьеса которую ты мечтаешь поставить, но не можешь найти актеров
+курио всс скажи что пьеса эта - похотливая аргнонианская дева. Спроси кто хочет из местных порепетировать?
+
+hold
+курио всс скажи, что там есть две роли - знатный господин и его служанка.
+
+hold
+курио всс скажи, что пусть роль знатного господина читает мувис моран
+мувис всс стесняясь, колеблясь - придумай причину почему - но согласись
+всс всс скажи, а раз аргониан у нас нет, то пусть Каминда читает роль служанки
+каминда всс стесняясь, колеблясь - придумай причину почему - но согласись
+
+снорри всс скажи что мувис нихуя не годится на роли, он же задрот и заикается через слово. Скажи что а вот я бы был бы преотличнейшим знатным господином. Курио дай мне попробовать эту роль!
+хельвиан всс посмейся со снорри
+курио всс скажи, хм, интересная идея, и в правду. Спроси у мувиса не против ли он?
+мувис всс кратко скажи, что нет, пусть снорри берет роль
+курио всс скажи ну и отлично
+
+hold
+каминда выйди с подиума и добавь trigger_poi_2
+
+hold
+
+курио всс скажи, что даешь текст ролей Каминде и Снорри. И спроси готовы ли они
+каминда всс ответь что готова
+снорри всс ответь что готова
+хиньярси всс скажи, что пиздец такого не было никогда в этом борделе... мм школе искусств
+курио всс скажи так хорош базарить, и дай команду НАЧАЛИ!
+
+каминда всс прочитай текст роли служанки: Разумеется, нет, добрый сэр! Я здесь только для того, чтобы убрать ваши комнаты.
+снорри всс прочитай текст роли господина: И это всё, ради чего ты пришла, малышка? Мои комнаты?
+каминда всс прочитай текст роли служанки:Я в толк не возьму, на что вы намекаете, хозяин. Я всего лишь бедная аргонианская служанка.
+курио всс останови всех, и скажи чтобы они начали заново, так не пойдет. Пусть читают роли как есть, без своих комментариев.
+каминда всс извинись, и скажи что готова
+снорри всс извинись, и скажи что готов читать текст без выебонов
+
+каминда скажи один в один: Разумеется, нет, добрый сэр! Я здесь только для того, чтобы убрать ваши комнаты.
+снорри скажи один в один: И это всё, ради чего ты пришла, малышка? Мои комнаты?
+каминда скажи один в один:Я в толк не возьму, на что вы намекаете, хозяин. Я всего лишь бедная аргонианская служанка.
+снорри скажи один в один: Ну конечно же, моя пышечка. И очень хорошенькая. Такие сильные ноги и красивый хвост.
+каминда скажи один в один:Вы смущаете меня, сэр!
+снорри скажи один в один: Не бойся. Со мной ты в безопасности.
+каминда скажи один в один: Мне надо закончить уборку, сэр. Хозяйка мне голову оторвёт, если я не закончу всё вовремя!
+снорри скажи один в один: Уборку, да? У меня есть кое-что для тебя. Вот, отполируй мое копьё.
+каминда скажи один в один: Но оно такое большое! Это может занять у меня всю ночь!
+снорри скажи один в один: У нас с тобой полно времени, моя милая. Полно времени.
+
+хиньярси всс посмейся очень коротко с копья
+
+курио всс скажи Каминде КОНЕЦ СЦЕНЫ УРРРАА получилось
+руна всс скажи что думаешь о пьесе
+курио порадуйся с Снорри насколько охеренно получилось
+
+hold
+
+курио скажи губерону что ты доволен этой школой и будешь её спонсировать дальше. А пьесу поставим в театре в вивеке через неделю. снорри и Каминда - оба к Курио на аудиенцию завтра!
+снорри стесняясь согласись
+Каминда всс скажи о да Крассиус я буду рада быть там
+
+курио всс скажи ну и славно всем пока ребята я ушёл спать. скажи Губерон пойдем уже поздно, нам ещё силт страйдера ловить
+курио попрощайся и добавь trigger_poi_4
+
+курио всс скажи губерону что ты очень доволен крайне неожиданным результатом. Каминда просто восхитительно, а Снорри - ты только глянь на его бедра, уух.
+курио всс скажи губерону что ты предвкушаешь завтрашний день, и визит будущи несомненно великих актеров Морровинда, а может и всего Тамриэля!
+
+</details>
