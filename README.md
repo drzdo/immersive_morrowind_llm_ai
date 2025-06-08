@@ -308,26 +308,35 @@ llm:
 
 # FAQ
 
-Can it be integrated with other games (Gothic, Fallout, etc)?\
-In theory - yes. One would need to implement "game mod", and adjust "server side" accordingly.
+Q. Can it be integrated with other games (Gothic, Fallout, etc)?\
+A. In theory - yes. One would need to implement "game mod", and adjust "server side" accordingly.
 
-Can it be integrated with OpenMW?\
-Currently - no, but technically possible. OpenMW Lua API should be extended to support everything what this mod requires. MWSE is simply superb in this regard as it provides a lot of possibilities. OpenMW can as well, but it needs to be implemented.
+Q. Can it be integrated with OpenMW?\
+A. Currently - no, but technically possible. OpenMW Lua API should be extended to support everything what this mod requires. MWSE is simply superb in this regard as it provides a lot of possibilities. OpenMW can as well, but it needs to be implemented.
 
-Can it be used with other languages?\
-Yes. It should be easy enough transition from the technical standpoint.
+Q. Can it be used with other languages?\
+A. Yes. It should be easy enough transition from the technical standpoint.
 
-Is it free?\
-The mod itself is opensource under GPLv3.\
+Q. Is it free?\
+A. The mod itself is opensource under GPLv3.\
 Google Gemini can be used for free if you do not reach limits.\
 Elevenlabs - you have to pay for it.\
 Vosk locally is free.
 
-Can another LLM/STT/TTS system get integrated?\
-Yes, it should be easy to do, feel free to check out the code.
+Q. Can I modify the mod, create a fork?\
+A. Yes, of course.
 
-Can you introduce the code base a bit?\
-Yes. Let's take a look:
+Q. Can I upload this mod or changed version to the Nexus (or any other platform)?\
+A. Yes. Please include the link to this repository.
+
+Q. Is there a more user-friendly guide?
+A. I encourage somebody from the communite to prepare it. If you do - please send me the link, I'll attach it here.
+
+Q. Can another LLM/STT/TTS system get integrated?\
+A. Yes, it should be easy to do, feel free to check out the code.
+
+Q. Can you introduce the code base a bit?\
+A. Yes. Let's take a look:
 ```yml
 src
     mwse_mod # integration with the Morrowind itself, written in Lua
@@ -348,8 +357,8 @@ src
         tts # abstracted out TTS proxy
 ```
 
-Can this be set up as a remote server?\
-Yes. It would require splitting server into two parts: local and remote. Local would be listening to the mic, and remote would be communicating with external backends (STT/TTS/LLM). Local part would communicate to the remote, and game would communicate to the local part.
+Q. Can this be set up as a remote server?\
+A. Yes. It would require splitting server into two parts: local and remote. Local would be listening to the mic, and remote would be communicating with external backends (STT/TTS/LLM). Local part would communicate to the remote, and game would communicate to the local part.
 
 # Authors
 
