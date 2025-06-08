@@ -7,7 +7,9 @@ What it does in short:
 - NPC can generate response using power of a chosen LLM
 - and finally NPC speaks the generated line (TTS = text-to-speech)
 
-Be aware that description below requires a bit of a technical knowledge from the reader.
+You can even direct a conversation between NPCs, look into `scene_instructions.py`.
+
+*Для понимающих русский язык - вот плейлист с видосами, как это звучит и выглядит*: https://www.youtube.com/watch?v=AzXEMGyHnrY&list=PLMnNOtiaekqkUdzVFybvpACl9h3pCZYnq&index=15
 
 ![Screenshot_1](./docs/Screenshot_1.jpg)
 NPCs are talking to each other.
@@ -18,6 +20,8 @@ MWSE config menu.
 ![MWSE config menu](./docs/Screenshot_3.jpg)
 Server application launched locally.
 
+Be aware that description below requires a bit of a technical knowledge from the reader.\
+I encourage somebody to prepare a more user-friendly guide :)
 
 # License
 
