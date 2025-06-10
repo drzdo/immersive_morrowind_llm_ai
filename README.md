@@ -446,6 +446,8 @@ hold
 
 <details>
 <summary>Here's example of a scene directing instructions for the forth section of this video https://www.youtube.com/watch?v=AzXEMGyHnrY (Krassius Kurio, and Suran's brothel)</summary>
+  
+``` ini
 poi activate,зайти внутрь,53577,-49737,315,hlaalu_loaddoor_02
 poi travel,подойти к бару,-274,-274,7
 poi travel,подойти посмотреть на танцовщиц,268,-248,7
@@ -540,4 +542,5 @@ hold
 курио всс скажи губерону что ты очень доволен крайне неожиданным результатом. Каминда просто восхитительно, а Снорри - ты только глянь на его бедра, уух.
 курио всс скажи губерону что ты предвкушаешь завтрашний день, и визит будущи несомненно великих актеров Морровинда, а может и всего Тамриэля!
 
+```
 </details>
