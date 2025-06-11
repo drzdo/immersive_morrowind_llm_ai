@@ -221,15 +221,22 @@ class NpcLlmPickActorService:
 
         cfg = self._config.strategy_random
 
-        if total_said_after_player > cfg.npc_phrases_after_player_min:
+        if total_said_after_player >= cfg.npc_phrases_after_player_max:
             return NpcLlmPickActorService.Response(
                 actor_to_act=request.player.actor_ref,
                 reason="(dialog took too long)",
                 pass_reason_to_npc=False
             )
 
+        if cfg.npc_phrases_after_player_max == 0:
+            return NpcLlmPickActorService.Response(
+                actor_to_act=request.player.actor_ref,
+                reason="(npc_phrases_after_player_max is 0)",
+                pass_reason_to_npc=False
+            )
+
         end_dialog_proba = 0.0
-        if total_said_after_player == cfg.npc_phrases_after_player_min:
+        if total_said_after_player >= cfg.npc_phrases_after_player_min:
             factor = (
                 (total_said_after_player - cfg.npc_phrases_after_player_min)
                 /
