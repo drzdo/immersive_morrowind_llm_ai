@@ -1,3 +1,4 @@
+import os
 from typing import Literal, NamedTuple
 from pydantic import BaseModel, Field
 from pynput import keyboard
@@ -48,6 +49,8 @@ class SceneInstructions:
     def get_next_manual_instruction_for_pick_npc(self, hearing_npcs: list[Npc]) -> ManualInstruction | None:
         if self._config is None:
             return None
+        if not os.path.exists(self._config.file):
+            return
         if self._manually_instructed_to_hold_on_instructions:
             return None
 
