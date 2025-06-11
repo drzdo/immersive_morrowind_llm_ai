@@ -1,4 +1,3 @@
-from typing import NamedTuple
 from util.distance import Distance
 from util.logger import Logger
 
@@ -14,10 +13,9 @@ from game.service.player_services.player_provider import PlayerProvider
 logger = Logger(__name__)
 
 
-class _NpcSayAccumulatedContext(NamedTuple):
+class _NpcSayAccumulatedContext:
     say_data: StoryItemData.SayProcessed
     reaction_list: list[str]
-
 
 class EventProducerFromStory:
     def __init__(self, producer: EventProducer, player_provider: PlayerProvider, npc_service: NpcService, i18n: I18n) -> None:
@@ -28,7 +26,8 @@ class EventProducerFromStory:
 
     async def publish_events_from_items(
         self,
-        item_data_list: list[StoryItemDataAlias]
+        item_data_list: list[StoryItemDataAlias],
+        is_in_dialog: bool
     ):
         logger.debug(f"Going to publish events from item data list: {item_data_list}")
 
@@ -43,7 +42,9 @@ class EventProducerFromStory:
                     if say_ctx:
                         flushed_say_ctx.append(say_ctx)
 
-                    say_ctx = _NpcSayAccumulatedContext(data, [])
+                    say_ctx = _NpcSayAccumulatedContext()
+                    say_ctx.say_data = data
+                    say_ctx.reaction_list = []
                 elif data.type == 'npc_trigger_dialog_topic':
                     event_data_to_send.append(
                         EventDataFromServer.TriggerTopicInDialog(
@@ -203,14 +204,18 @@ class EventProducerFromStory:
                 reaction_text = ", ".join(say_ctx.reaction_list)
 
             text = say_ctx.say_data.text
-            if say_ctx.say_data.target:
-                t = say_ctx.say_data.target
-                if t.type == 'npc':
-                    text = f"{say_ctx.say_data.speaker.name} говорит {t.name}: {say_ctx.say_data.text}"
-                else:
-                    text = f"{say_ctx.say_data.speaker.name} говорит мне: {say_ctx.say_data.text}"
+            if is_in_dialog:
+                # Omit names when in dialog.
+                text = say_ctx.say_data.text
             else:
-                text = f"{say_ctx.say_data.speaker.name} думает вслух: {say_ctx.say_data.text}"
+                if say_ctx.say_data.target:
+                    t = say_ctx.say_data.target
+                    if t.type == 'npc':
+                        text = f"{say_ctx.say_data.speaker.name} говорит {t.name}: {say_ctx.say_data.text}"
+                    else:
+                        text = f"{say_ctx.say_data.speaker.name} говорит мне: {say_ctx.say_data.text}"
+                else:
+                    text = f"{say_ctx.say_data.speaker.name} думает вслух: {say_ctx.say_data.text}"
 
             event_data_to_send.append(EventDataFromServer.ActorSays(
                 type='actor_says',

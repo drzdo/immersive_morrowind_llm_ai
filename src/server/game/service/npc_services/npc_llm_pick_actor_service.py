@@ -51,12 +51,13 @@ class NpcLlmPickActorService:
         pass_reason_to_npc: bool
 
     def __init__(self, config: Config, llm_system: LlmSystem, env_provider: EnvProvider, i18n: I18n, sanitizer: TextSanitizer,
-                 scene_instructions: SceneInstructions) -> None:
+                 scene_instructions: SceneInstructions, is_dummy_tts: bool) -> None:
         self._config = config
         self._llm_system = llm_system
         self._env_provider = env_provider
         self._i18n = i18n
         self._sanitizer = sanitizer
+        self._is_dummy_tts = is_dummy_tts
 
         self._main_session = llm_system.create_session()
         self._main_session_lock = asyncio.Lock()
@@ -108,6 +109,13 @@ class NpcLlmPickActorService:
 
             if request.is_in_dialog:
                 return self._decide_in_dialog(request, exclude_actors)
+
+            if self._is_dummy_tts:
+                return NpcLlmPickActorService.Response(
+                    actor_to_act=request.player.actor_ref,
+                    reason="(TTS system is dummy, skip NPC chatting)",
+                    pass_reason_to_npc=False
+                )
 
             if sheogorath_level is None:
                 response = self._exec_strategy_random(request, eligible_npcs, total_said_after_player)

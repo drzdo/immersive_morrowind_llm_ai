@@ -31,7 +31,9 @@ function this._subscribeForEvents()
     })
 
     local function update_visibility()
-        this.root.visible = not util.is_in_dialog_menu()
+        if this.root then
+            this.root.visible = not util.is_in_dialog_menu()
+        end
     end
     event.register(tes3.event.menuEnter, update_visibility, {
         unregisterOnLoad = false
@@ -150,6 +152,9 @@ end
 
 function this.handle_actor_says(ref, text, reaction_text, audio_duration_sec)
     if ref == tes3.mobilePlayer.reference then
+        return
+    end
+    if util.is_in_dialog_menu() then
         return
     end
 

@@ -19,6 +19,7 @@ function this.animate_label(req)
     local char_per_sec = req["char_per_sec"]
     local should_continue_fn = req["should_continue"]
     local on_end = req["on_end"]
+    local real = req["real"]
 
     if label == nil then
         return
@@ -39,7 +40,7 @@ function this.animate_label(req)
 
     timer.start({
         duration = 1.0 / char_per_sec,
-        type = timer.simulate,
+        type = real and timer.real or timer.simulate,
         iterations = -1,
         persist = false,
         callback = function(e)
