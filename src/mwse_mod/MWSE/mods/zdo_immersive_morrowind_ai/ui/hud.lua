@@ -31,7 +31,9 @@ function this._subscribeForEvents()
     })
 
     local function update_visibility()
-        this.root.visible = not util.is_in_dialog_menu()
+        if this.root then
+            this.root.visible = not util.is_in_dialog_menu()
+        end
     end
     event.register(tes3.event.menuEnter, update_visibility, {
         unregisterOnLoad = false

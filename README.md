@@ -239,7 +239,70 @@ A. Yes. It would require splitting server into two parts: local and remote. Loca
 
 ## Config example
 
-Here example of my local config, with API keys stripped away:
+Example of the most basic config, only with Gemini and no TTS/STT:
+
+```yaml
+morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
+language: ru
+event_bus:
+  consumers: 30
+  producers: 30
+  system:
+    mwse_tcp:
+      encoding: cp1251
+      port: 18080
+    type: mwse_tcp
+llm:
+  system:
+    type: google
+
+    google:
+      api_key: AIzaSyCfV_0n8eJxtxS-8mL-<...>
+      # model_name: gemini-1.5-flash
+      model_name: gemini-2.0-flash
+  llm_logger:
+    directory: D:\Games\immersive_morrowind_llm_logs
+    max_files: 300
+log:
+  log_to_console: true
+  log_to_console_level: info
+  log_to_file: true
+  log_to_file_level: debug
+rpc:
+  max_wait_time_sec: 5.0
+speech_to_text:
+  delayed_stop_sec: 0.5
+  system:
+    type: dummy
+text_to_speech:
+  sync_print_and_speak: false
+  output:
+    file_name_format: tts_{}.mp3
+    max_files_count: 15
+  system:
+    type: dummy
+database:
+  directory: D:\Games\immersive_morrowind_db
+npc_database:
+  max_stored_story_items: 250
+  max_used_in_llm_story_items: 50
+player_database:
+  max_stored_story_items: 200
+  book_name: Книга Путей
+  max_shown_story_items: 50
+npc_speaker:
+  release_before_end_sec: 2.5
+npc_director:
+  npc_max_phrases_after_player_hard_limit: 0
+  strategy_random:
+      npc_phrases_after_player_min: 0
+      npc_phrases_after_player_max: 0
+      npc_phrases_after_player_min_proba: 0.0
+  random_comment_delay_sec: 120
+  random_comment_proba: 0.0
+```
+
+Here example of my local config, with Gemini+Vosk+ElevenLabs, with API keys stripped away:
 
 ```yaml
 morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
@@ -289,10 +352,11 @@ text_to_speech:
   output:
     file_name_format: tts_{}.mp3
     max_files_count: 15
-  ffmpeg:
-    path_to_ffmpeg_exe: D:\ffmpeg\bin\ffmpeg.exe
-    target_char_per_sec: 4
-    tempo_mul: 0.85
+  # FFmpeg can speed up audio if NPC speech rate is too small.
+  # ffmpeg:
+  #   path_to_ffmpeg_exe: D:\ffmpeg\bin\ffmpeg.exe
+  #   target_char_per_sec: 4
+  #   tempo_mul: 0.85
   system:
     type: elevenlabs
     elevenlabs:
@@ -337,16 +401,16 @@ player_database:
 npc_speaker:
   release_before_end_sec: 2.5
 npc_director:
-  npc_max_phrases_after_player_hard_limit: 100
+  npc_max_phrases_after_player_hard_limit: 3
   # npc_max_phrases_after_player_hard_limit: 10
   strategy_random:
       npc_phrases_after_player_min: 1
-      npc_phrases_after_player_max: 3
+      npc_phrases_after_player_max: 2
       npc_phrases_after_player_min_proba: 0.5
-  random_comment_delay_sec: 60
+  random_comment_delay_sec: 120
   random_comment_proba: 0.1
-  force_sheogorath_level: mad
-  can_include_player_in_sheogorath: never
+  # force_sheogorath_level: mad
+  # can_include_player_in_sheogorath: never
 scene_instructions:
   file: D:\Games\immersive_morrowind_manual_instructions.txt
   encoding: cp1251

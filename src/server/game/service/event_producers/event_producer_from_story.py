@@ -1,4 +1,3 @@
-from typing import NamedTuple
 from util.distance import Distance
 from util.logger import Logger
 
