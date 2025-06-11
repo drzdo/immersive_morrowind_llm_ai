@@ -509,4 +509,4 @@ class GameMaster:
         self._npc_personal_story_service.add_items_to_personal_stories(npcs_to_add_to, item_data_list)
 
     async def _publish_events(self, item_data_list: list[StoryItemDataAlias]):
-        await self._event_producer_from_story.publish_events_from_items(item_data_list)
+        await self._event_producer_from_story.publish_events_from_items(item_data_list, self._dialog_provider.is_in_dialog)
