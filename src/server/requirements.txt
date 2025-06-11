@@ -2,6 +2,8 @@
 colorlog
 pathvalidate
 pydantic
+pyyaml
+pynput
 
 # stt
 vosk
