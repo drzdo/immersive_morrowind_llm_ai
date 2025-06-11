@@ -135,6 +135,7 @@ function this.handle_actor_says(ref, text, reaction_text, audio_duration_sec)
                 label = label,
                 char_per_sec = 25,
                 text = text,
+                real = true,
                 should_continue = function()
                     if util.is_in_dialog_menu() then
                         this.scroll_to_bottom()
@@ -152,6 +153,7 @@ function this.handle_actor_says(ref, text, reaction_text, audio_duration_sec)
             label = label,
             audio_duration_sec = audio_duration_sec,
             text = text,
+            real = true,
             should_continue = function()
                 if util.is_in_dialog_menu() then
                     this.scroll_to_bottom()
@@ -169,6 +171,7 @@ function this.handle_actor_says(ref, text, reaction_text, audio_duration_sec)
                             label = reaction_label,
                             char_per_sec = 25,
                             text = reaction_text,
+                            real = true,
                             should_continue = function()
                                 if util.is_in_dialog_menu() then
                                     this.scroll_to_bottom()
