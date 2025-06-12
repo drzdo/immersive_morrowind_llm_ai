@@ -239,7 +239,75 @@ A. Yes. It would require splitting server into two parts: local and remote. Loca
 
 ## Config example
 
+<<<<<<< Updated upstream
 Here example of my local config, with API keys stripped away:
+=======
+Example of the most basic config, only with Gemini and no TTS/STT:
+
+```yaml
+morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
+language: ru
+event_bus:
+  consumers: 30
+  producers: 30
+  system:
+    mwse_tcp:
+      encoding: cp1251
+      port: 18080
+    type: mwse_tcp
+llm:
+  system:
+    type: google
+
+    google:
+      api_key: AIzaSyCfV_0n8eJxtxS-8mL-<...>
+      # model_name: gemini-1.5-flash
+      model_name: gemini-2.0-flash
+  llm_logger:
+    directory: D:\Games\immersive_morrowind_llm_logs
+    max_files: 300
+log:
+  log_to_console: true
+  log_to_console_level: info
+  log_to_file: true
+  log_to_file_level: debug
+rpc:
+  max_wait_time_sec: 5.0
+speech_to_text:
+  delayed_stop_sec: 0.5
+  system:
+    type: dummy
+text_to_speech:
+  sync_print_and_speak: false
+  output:
+    file_name_format: tts_{}.mp3
+    max_files_count: 15
+  system:
+    type: dummy
+database:
+  directory: D:\Games\immersive_morrowind_db
+npc_database:
+  max_stored_story_items: 250
+  max_used_in_llm_story_items: 50
+player_database:
+  max_stored_story_items: 200
+  book_name: Книга Путей
+  max_shown_story_items: 50
+npc_speaker:
+  release_before_end_sec: 2.5
+npc_director:
+  npc_max_phrases_after_player_hard_limit: 0
+  strategy_random:
+      npc_phrases_after_player_min: 0
+      npc_phrases_after_player_max: 0
+      npc_phrases_after_player_min_proba: 0.0
+  random_comment_delay_sec: 120
+  random_comment_proba: 0.0
+scene_instructions: null
+```
+
+Here example of my local config, with Gemini+Vosk+ElevenLabs, with API keys stripped away:
+>>>>>>> Stashed changes
 
 ```yaml
 morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
@@ -446,6 +514,8 @@ hold
 
 <details>
 <summary>Here's example of a scene directing instructions for the forth section of this video https://www.youtube.com/watch?v=AzXEMGyHnrY (Krassius Kurio, and Suran's brothel)</summary>
+
+```ini
 poi activate,зайти внутрь,53577,-49737,315,hlaalu_loaddoor_02
 poi travel,подойти к бару,-274,-274,7
 poi travel,подойти посмотреть на танцовщиц,268,-248,7
@@ -539,5 +609,5 @@ hold
 
 курио всс скажи губерону что ты очень доволен крайне неожиданным результатом. Каминда просто восхитительно, а Снорри - ты только глянь на его бедра, уух.
 курио всс скажи губерону что ты предвкушаешь завтрашний день, и визит будущи несомненно великих актеров Морровинда, а может и всего Тамриэля!
-
+```
 </details>
