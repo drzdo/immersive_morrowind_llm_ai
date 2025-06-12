@@ -300,6 +300,7 @@ npc_director:
       npc_phrases_after_player_min_proba: 0.0
   random_comment_delay_sec: 120
   random_comment_proba: 0.0
+scene_instructions: null
 ```
 
 Here example of my local config, with Gemini+Vosk+ElevenLabs, with API keys stripped away:
@@ -352,11 +353,10 @@ text_to_speech:
   output:
     file_name_format: tts_{}.mp3
     max_files_count: 15
-  # FFmpeg can speed up audio if NPC speech rate is too small.
-  # ffmpeg:
-  #   path_to_ffmpeg_exe: D:\ffmpeg\bin\ffmpeg.exe
-  #   target_char_per_sec: 4
-  #   tempo_mul: 0.85
+  ffmpeg:
+    path_to_ffmpeg_exe: D:\ffmpeg\bin\ffmpeg.exe
+    target_char_per_sec: 4
+    tempo_mul: 0.85
   system:
     type: elevenlabs
     elevenlabs:
@@ -401,16 +401,16 @@ player_database:
 npc_speaker:
   release_before_end_sec: 2.5
 npc_director:
-  npc_max_phrases_after_player_hard_limit: 3
+  npc_max_phrases_after_player_hard_limit: 100
   # npc_max_phrases_after_player_hard_limit: 10
   strategy_random:
       npc_phrases_after_player_min: 1
-      npc_phrases_after_player_max: 2
+      npc_phrases_after_player_max: 3
       npc_phrases_after_player_min_proba: 0.5
-  random_comment_delay_sec: 120
+  random_comment_delay_sec: 60
   random_comment_proba: 0.1
-  # force_sheogorath_level: mad
-  # can_include_player_in_sheogorath: never
+  force_sheogorath_level: mad
+  can_include_player_in_sheogorath: never
 scene_instructions:
   file: D:\Games\immersive_morrowind_manual_instructions.txt
   encoding: cp1251
@@ -510,6 +510,8 @@ hold
 
 <details>
 <summary>Here's example of a scene directing instructions for the forth section of this video https://www.youtube.com/watch?v=AzXEMGyHnrY (Krassius Kurio, and Suran's brothel)</summary>
+
+```ini
 poi activate,зайти внутрь,53577,-49737,315,hlaalu_loaddoor_02
 poi travel,подойти к бару,-274,-274,7
 poi travel,подойти посмотреть на танцовщиц,268,-248,7
@@ -603,5 +605,5 @@ hold
 
 курио всс скажи губерону что ты очень доволен крайне неожиданным результатом. Каминда просто восхитительно, а Снорри - ты только глянь на его бедра, уух.
 курио всс скажи губерону что ты предвкушаешь завтрашний день, и визит будущи несомненно великих актеров Морровинда, а может и всего Тамриэля!
-
+```
 </details>
