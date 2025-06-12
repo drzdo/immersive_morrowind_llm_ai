@@ -239,9 +239,6 @@ A. Yes. It would require splitting server into two parts: local and remote. Loca
 
 ## Config example
 
-<<<<<<< Updated upstream
-Here example of my local config, with API keys stripped away:
-=======
 Example of the most basic config, only with Gemini and no TTS/STT:
 
 ```yaml
@@ -307,7 +304,6 @@ scene_instructions: null
 ```
 
 Here example of my local config, with Gemini+Vosk+ElevenLabs, with API keys stripped away:
->>>>>>> Stashed changes
 
 ```yaml
 morrowind_data_files_dir: C:\SteamLibrary\steamapps\common\Morrowind\Data Files
