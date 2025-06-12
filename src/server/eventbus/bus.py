@@ -35,10 +35,10 @@ class EventBus(EventProducer, EventConsumer):
         self._events_consumed_from_game: list[Event] = []
 
     def start(self):
-        for _ in range(0, self._config.producers):
+        for _ in range(self._config.producers):
             asyncio.get_event_loop().create_task(self._producer())
 
-        for _ in range(0, self._config.consumers):
+        for _ in range(self._config.consumers):
             asyncio.get_event_loop().create_task(self._consumer())
 
         self._backend.start(self._handle_event_from_game)

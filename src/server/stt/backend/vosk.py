@@ -28,7 +28,7 @@ class VoskSttBackend(AbstractSttBackend):
         device_info = sd.query_devices(sd.default.device[config.device_index], 'input')  # type: ignore
         samplerate = int(device_info['default_samplerate']) # type: ignore
 
-        logger.info("Device to use {} {}".format(sd.default.device[0], device_info)) # type: ignore
+        logger.info(f"Device to use {sd.default.device[0]} {device_info}")
 
         logger.info("Build the model and recognizer objects. This may take a few minutes.")
 
@@ -53,7 +53,7 @@ class VoskSttBackend(AbstractSttBackend):
         thread.start()
 
     async def _timer(self):
-        Logger.set_ctx(f"VoskSttBackend")
+        Logger.set_ctx("VoskSttBackend")
 
         while self._main_event_loop.is_running():
             recognizing = None
@@ -88,7 +88,7 @@ class VoskSttBackend(AbstractSttBackend):
     def _listening_thread(self):
         Logger.set_ctx("vosk_thread")
 
-        logger = Logger(__name__ + ".thread")
+        logger = Logger(f"{__name__}.thread")
         logger.debug("Thread started")
 
         try:
@@ -125,7 +125,7 @@ class VoskSttBackend(AbstractSttBackend):
                         text = result_dict.get('text', '').strip()
 
                         if len(text) > 0:
-                            accumulated_text = (accumulated_text + " " + text).strip()
+                            accumulated_text = f"{accumulated_text} {text}".strip()
                             updated_accumulated_text = True
 
                     if self._is_listening and updated_accumulated_text:
@@ -139,7 +139,7 @@ class VoskSttBackend(AbstractSttBackend):
                         logger.debug(f"Flushing '{accumulated_text}'")
 
                         self._texts_lock.acquire_lock()
-                        self._recognized_text = (self._recognized_text + " " + accumulated_text).strip()
+                        self._recognized_text = f"{self._recognized_text} {accumulated_text}".strip()
                         self._texts_lock.release_lock()
 
                         accumulated_text = ""
@@ -151,8 +151,8 @@ class VoskSttBackend(AbstractSttBackend):
 
     def start_listening(self):
         self._is_listening = True
-        logger.debug(f"Start listening")
+        logger.debug("Start listening")
 
     def stop_listening(self):
         self._is_listening = False
-        logger.debug(f"Stop listening")
+        logger.debug("Stop listening")

@@ -54,7 +54,9 @@ class StoryItemToHistoryConverter:
                 else:
                     return f"({delta_str}{initiator} ухудшил{a} своё отношение к {target_dat} на {d.value})"
             case 'npc_start_follow':
-                return f"({delta_str}{initiator} решил{a} идти вместе с {target_tvo})"
+                return (
+                    f"({delta_str}{initiator} решил{a} идти вместе с {target_tvo})"
+                )
             case 'npc_stop_follow':
                 return f"({delta_str}{initiator} решил{a} больше не идти вместе с {target_tvo})"
             case 'npc_pick_up_item':
@@ -76,11 +78,15 @@ class StoryItemToHistoryConverter:
                     return f"({delta_str}{initiator} был{a} убит{a})"
             case 'say_processed':
                 if d.target:
-                    return f"({delta_str}{initiator} сказал{a} {target_dat}) {d.text}"
+                    return (
+                        f"({delta_str}{initiator} сказал{a} {target_dat}) {d.text}"
+                    )
                 else:
                     return f"({delta_str}{initiator} сказал{a} вслух) {d.text}"
             case 'say_raw':
-                logger.error(f"say_raw should not be added to the story: npc={actor_pov} data={d}")
+                logger.error(
+                    f"say_raw should not be added to the story: npc={actor_pov} data={d}"
+                )
                 return ''
             case 'barter_offer':
                 selling = ", ".join(d.selling)
@@ -88,30 +94,30 @@ class StoryItemToHistoryConverter:
                 v = abs(d.value)
                 if d.success:
                     if d.value < 0:  # initiator was buying
-                        if len(selling) > 0:
-                            return f"{delta_str}{initiator} купил{a} у {target_gen} {buying}, при этом продав {selling} и доплатив {v} монет"
-                        else:
-                            return f"{delta_str}{initiator} купил{a} у {target_gen} {buying} в сумме за {v} монет"
+                        return (
+                            f"{delta_str}{initiator} купил{a} у {target_gen} {buying}, при этом продав {selling} и доплатив {v} монет"
+                            if selling != ""
+                            else f"{delta_str}{initiator} купил{a} у {target_gen} {buying} в сумме за {v} монет"
+                        )
                     elif d.value > 0:  # initiator was selling
-                        if len(buying) > 0:
+                        if buying != "":
                             return f"{delta_str}{initiator} продал{a} {target_dat} {selling}, при этом купив {buying} и получив {v} монет сдачи"
                         else:
                             return f"{delta_str}{initiator} продал{a} {target_dat} {selling} в сумме за {v} монет"
                     else:
                         return f"{delta_str}{initiator} обменял{ss} с {target_dat}: {initiator} отдал{a} {selling}, при этом взяв у {target_gen} {buying}"
-                else:
-                    if d.value < 0:  # initiator was buying
-                        if len(selling) > 0:
-                            return f"{delta_str}{initiator} попытал{ss} купить у {target_gen} {buying}, при этом предлагая {selling} и {v} монет сверху - но {target_nom} отказался"
-                        else:
-                            return f"{delta_str}{initiator} попытал{ss} купить у {target_gen} {buying} в сумме за {v} монет - но {target_nom} отказался"
-                    elif d.value > 0:  # initiator was selling
-                        if len(buying) > 0:
-                            return f"{delta_str}{initiator} попытал{ss} продать {target_dat} {selling}, при этом предлагая {buying} и {v} монет сдачи - но {target_nom} отказался"
-                        else:
-                            return f"{delta_str}{initiator} попытал{ss} продать {target_dat} {selling} в сумме за {v} монет - но {target_nom} отказался"
+                elif d.value < 0:  # initiator was buying
+                    if selling != "":
+                        return f"{delta_str}{initiator} попытал{ss} купить у {target_gen} {buying}, при этом предлагая {selling} и {v} монет сверху - но {target_nom} отказался"
                     else:
-                        return f"{delta_str}{initiator} попытал{ss} обменять с {target_dat}: {initiator} бы отдал{a} {selling}, при этом бы взяв у {target_gen} {buying} - но {target_nom} отказался"
+                        return f"{delta_str}{initiator} попытал{ss} купить у {target_gen} {buying} в сумме за {v} монет - но {target_nom} отказался"
+                elif d.value > 0:  # initiator was selling
+                    if buying != "":
+                        return f"{delta_str}{initiator} попытал{ss} продать {target_dat} {selling}, при этом предлагая {buying} и {v} монет сдачи - но {target_nom} отказался"
+                    else:
+                        return f"{delta_str}{initiator} попытал{ss} продать {target_dat} {selling} в сумме за {v} монет - но {target_nom} отказался"
+                else:
+                    return f"{delta_str}{initiator} попытал{ss} обменять с {target_dat}: {initiator} бы отдал{a} {selling}, при этом бы взяв у {target_gen} {buying} - но {target_nom} отказался"
             case 'actor_pick_reason':
                 match pov:
                     case 'npc_story':

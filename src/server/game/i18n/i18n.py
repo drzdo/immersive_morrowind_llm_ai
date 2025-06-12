@@ -10,14 +10,10 @@ class I18n:
     def format_time(self, hour: float):
         gametime_h = math.floor(hour)
         gametime_m = math.floor((hour - gametime_h) * 60)
-        gametime = f"{gametime_h} часов {gametime_m} минут"
-        return gametime
+        return f"{gametime_h} часов {gametime_m} минут"
 
     def npc_change_disposition(self, value: int):
-        if value > 0:
-            return f"отношение +{value}"
-        else:
-            return f"отношение {value}"
+        return f"отношение +{value}" if value > 0 else f"отношение {value}"
 
     def give_gold(self, me: ActorRef,
                   giver: ActorRef, giver_female: bool,

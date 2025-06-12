@@ -103,4 +103,4 @@ class Rpc:
 
     def _raise_timeout_exception(self, request: Event):
         logger.error(f"RPC call timeout: request={request}")
-        raise Exception(f"RPC call timeout")
+        raise Exception("RPC call timeout")

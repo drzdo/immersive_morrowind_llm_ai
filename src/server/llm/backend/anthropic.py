@@ -56,7 +56,7 @@ class AnthropicLlmBackend(AbstractLlmBackend):
                 })
 
             t0 = time.time()
-            logger.debug(f"Sent request to the model, waiting...")
+            logger.debug("Sent request to the model, waiting...")
             response = self._client.messages.create(
                 model=self._config.model_name,
                 messages=history,

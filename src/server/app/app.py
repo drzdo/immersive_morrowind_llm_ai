@@ -37,8 +37,7 @@ class App:
         parser.add_argument(
             '--llm-probe-why', required=False, type=str,
             help='Ask LLM question about the history')
-        args = parser.parse_args()
-        return args
+        return parser.parse_args()
 
     async def _run(self):
         Logger.set_ctx("main")
@@ -118,13 +117,12 @@ class App:
             gm.start()
 
             logger.info(f"{SUCCESS} Game master started in {time.time() - t0} sec")
-            logger.info(f"Happy playing, game master is ready")
+            logger.info("Happy playing, game master is ready")
 
             while True:
                 await asyncio.sleep(1.0 / 10.0)
-        except asyncio.CancelledError or KeyboardInterrupt:
+        except (asyncio.CancelledError, KeyboardInterrupt):
             logger.info("Ctrl-C-ed")
-            pass
         except:
             raise
         finally:

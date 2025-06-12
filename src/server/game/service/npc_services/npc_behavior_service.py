@@ -44,7 +44,7 @@ class NpcBehaviorService:
 
 
     async def decide_who_should_act(self, player: Player, target: Optional[ActorRef], npcs: list[Npc]) -> NpcLlmPickActorService.Response:
-        if len(npcs) == 0:
+        if not npcs:
             logger.debug("No NPCs are passed, picking player to act")
             return NpcLlmPickActorService.Response(player.actor_ref, "(no npcs are passed)", pass_reason_to_npc=False)
 
@@ -71,8 +71,8 @@ class NpcBehaviorService:
             elif last_item.data.type == 'player_trigger_list_dialog_topics':
                 return NpcLlmPickActorService.Response(
                     last_item.data.target,
-                    f"List of topics triggered",
-                    pass_reason_to_npc=False
+                    "List of topics triggered",
+                    pass_reason_to_npc=False,
                 )
 
 
@@ -99,12 +99,14 @@ class NpcBehaviorService:
             ):
                 logger.debug(f"Npc {npc.actor_ref.ref_id} has triggered topic {item.data.trigger_topic}")
 
-                topic_response = "..."
-                for known_topic in request.known_topics:
-                    if known_topic.topic_text == item.data.trigger_topic:
-                        topic_response = known_topic.topic_response
-                        break
-
+                topic_response = next(
+                    (
+                        known_topic.topic_response
+                        for known_topic in request.known_topics
+                        if known_topic.topic_text == item.data.trigger_topic
+                    ),
+                    "...",
+                )
                 return NpcBehaviorService.Response(
                     item_data_list=[
                         StoryItemData.NpcTriggerDialogTopic(
@@ -125,11 +127,13 @@ class NpcBehaviorService:
                 logger.debug(f"Npc {npc.actor_ref.ref_id} has triggered list of topic")
 
                 topics: list[str] = []
-                for known_topic in request.known_topics:
-                    if known_topic.topic_text.lower() not in self._common_topics_lowercased:
-                        topics.append(known_topic.topic_text)
-
-                if len(topics) > 0:
+                topics.extend(
+                    known_topic.topic_text
+                    for known_topic in request.known_topics
+                    if known_topic.topic_text.lower()
+                    not in self._common_topics_lowercased
+                )
+                if topics:
                     return NpcBehaviorService.Response(
                         item_data_list=[
                             StoryItemData.SayProcessed(

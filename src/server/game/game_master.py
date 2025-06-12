@@ -257,7 +257,7 @@ class GameMaster:
 
             if actor_to_act.type == 'player':
                 if not self._player_was_going_to_act_last_time:
-                    logger.info(f"Player is going to act this time")
+                    logger.info("Player is going to act this time")
                     self._player_was_going_to_act_last_time = True
 
                 if self._npc_speaker_service.is_scene_locked_at(scene_lock_generation_id):
@@ -350,7 +350,7 @@ class GameMaster:
                 )
                 should_add_original_say_text = False
             else:
-                logger.warning(f"Player triggerred listing of topics without a target NPC")
+                logger.warning("Player triggerred listing of topics without a target NPC")
         else:
             if player_intention.npc_shut_up:
                 self._last_shut_up_command_ms = now_ms()
@@ -364,15 +364,14 @@ class GameMaster:
 
                 await self._npc_speaker_service.npcs_shut_up(lambda a: True)
 
-            if player_intention.npc_stop_follow:
-                if target_ref:
-                    item_data_list_from_player.append(
-                        StoryItemData.NpcStopFollow(
-                            type='npc_stop_follow',
-                            initiator=self._player_provider.local_player.actor_ref,
-                            target=target_ref
-                        )
+            if player_intention.npc_stop_follow and target_ref:
+                item_data_list_from_player.append(
+                    StoryItemData.NpcStopFollow(
+                        type='npc_stop_follow',
+                        initiator=self._player_provider.local_player.actor_ref,
+                        target=target_ref
                     )
+                )
 
             if player_intention.npc_stop_combat:
                 item_data_list_from_player.append(

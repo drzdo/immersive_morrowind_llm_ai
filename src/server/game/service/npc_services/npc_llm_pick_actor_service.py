@@ -68,8 +68,9 @@ class NpcLlmPickActorService:
         self._scene_instructions = scene_instructions
 
     async def pick_npc_to_act(self, request: Request) -> Response:
-        manual_response = self._scene_instructions.get_next_manual_instruction_for_pick_npc(request.hearing_npcs)
-        if manual_response:
+        if manual_response := self._scene_instructions.get_next_manual_instruction_for_pick_npc(
+            request.hearing_npcs
+        ):
             return NpcLlmPickActorService.Response(manual_response.actor_to_act, manual_response.reason, manual_response.pass_reason_to_npc)
 
         await self._main_session_lock.acquire()
@@ -83,8 +84,9 @@ class NpcLlmPickActorService:
             if last_said_story_item:
                 last_say_initiator = NpcStoryItemHelper.get_initiator(last_said_story_item.data)
                 if last_say_initiator and last_say_initiator.type == 'player':
-                    last_say_target = NpcStoryItemHelper.get_target(last_said_story_item.data)
-                    if last_say_target:
+                    if last_say_target := NpcStoryItemHelper.get_target(
+                        last_said_story_item.data
+                    ):
                         return NpcLlmPickActorService.Response(
                             actor_to_act=last_say_target,
                             reason="(target is derived from the story item data)",
@@ -100,7 +102,7 @@ class NpcLlmPickActorService:
 
                 eligible_npcs.append(npc)
 
-            if len(eligible_npcs) == 0:
+            if not eligible_npcs:
                 return NpcLlmPickActorService.Response(
                     actor_to_act=request.player.actor_ref,
                     reason="(no eligible npcs to speak)",
@@ -127,30 +129,29 @@ class NpcLlmPickActorService:
                     else:
                         silence_duration_ms = now_ms() - self._random_comment_last_ms
 
-                    if silence_duration_ms > self._config.random_comment_delay_sec:
-                        if random.random() < self._config.random_comment_proba:
-                            self._random_comment_last_ms = now_ms()
-
-                            l: list[str] = [
-                                "прокомментируй как будто думая вслух текущую погоду и время",
-                                f"прокомментируй как будто думая вслух твое отношение к {request.player.actor_ref.name}",
-                                f"прокомментируй как будто думая вслух состояние {request.player.actor_ref.name}",
-                                "прокомментируй как будто думая вслух ваше текущее местоположение",
-                                "прокомментируй как будто думая вслух свою или чужую одежду",
-                                "сочини как будто думая вслух короткий стих про Морровинд",
-                                "прокомментируй как будто думая вслух красоту окружения вокруг (придумай детали если надо)",
-                                "прокомментируй как будто думая вслух последнее что произошло с тобой недавно",
-                            ]
-                            reason = random.choice(l)
-
-                            if random.random() < 0.03:
-                                reason = "сочини как будто думая вслух короткий матерных стих про Морровинд"
-
-                            return NpcLlmPickActorService.Response(
-                                actor_to_act=random.choice(eligible_npcs).actor_ref,
-                                reason=reason,
-                                pass_reason_to_npc=True
-                            )
+                    if silence_duration_ms > self._config.random_comment_delay_sec and random.random() < self._config.random_comment_proba:
+                        self._random_comment_last_ms = now_ms()
+                    
+                        l: list[str] = [
+                            "прокомментируй как будто думая вслух текущую погоду и время",
+                            f"прокомментируй как будто думая вслух твое отношение к {request.player.actor_ref.name}",
+                            f"прокомментируй как будто думая вслух состояние {request.player.actor_ref.name}",
+                            "прокомментируй как будто думая вслух ваше текущее местоположение",
+                            "прокомментируй как будто думая вслух свою или чужую одежду",
+                            "сочини как будто думая вслух короткий стих про Морровинд",
+                            "прокомментируй как будто думая вслух красоту окружения вокруг (придумай детали если надо)",
+                            "прокомментируй как будто думая вслух последнее что произошло с тобой недавно",
+                        ]
+                        reason = random.choice(l)
+                    
+                        if random.random() < 0.03:
+                            reason = "сочини как будто думая вслух короткий матерных стих про Морровинд"
+                    
+                        return NpcLlmPickActorService.Response(
+                            actor_to_act=random.choice(eligible_npcs).actor_ref,
+                            reason=reason,
+                            pass_reason_to_npc=True
+                        )
 
                 return response
 
@@ -170,7 +171,14 @@ class NpcLlmPickActorService:
 
         for item in request.story_items:
             t = item.data.type
-            if t == 'say_processed' or t == 'player_trigger_dialog_topic' or t == 'player_trigger_list_dialog_topics' or t == 'npc_trigger_dialog_topic' or t == 'barter_offer' or t == 'ashfall_eat_stew':
+            if t in [
+                'say_processed',
+                'player_trigger_dialog_topic',
+                'player_trigger_list_dialog_topics',
+                'npc_trigger_dialog_topic',
+                'barter_offer',
+                'ashfall_eat_stew',
+            ]:
                 last_said_actor = NpcStoryItemHelper.get_initiator(item.data)
                 if last_said_actor is None:
                     continue
@@ -203,29 +211,28 @@ class NpcLlmPickActorService:
 
     def _decide_in_dialog(self, request: Request, exclude_actors: list[ActorRef]):
         if request.target is None:
-            logger.warning(f"No target in dialog, fallback to player")
+            logger.warning("No target in dialog, fallback to player")
             return NpcLlmPickActorService.Response(
                 actor_to_act=request.player.actor_ref,
                 reason="(no target in dialog)",
                 pass_reason_to_npc=False
             )
 
-        if request.target in exclude_actors:
-            logger.debug(f"Dialog target is excluded, fallback to player")
-            return NpcLlmPickActorService.Response(
-                actor_to_act=request.player.actor_ref,
-                reason="(dialog target is excluded)",
-                pass_reason_to_npc=False
-            )
-        else:
+        if request.target not in exclude_actors:
             return NpcLlmPickActorService.Response(
                 actor_to_act=request.target,
                 reason="(dialog target should respond)",
                 pass_reason_to_npc=False
             )
+        logger.debug("Dialog target is excluded, fallback to player")
+        return NpcLlmPickActorService.Response(
+            actor_to_act=request.player.actor_ref,
+            reason="(dialog target is excluded)",
+            pass_reason_to_npc=False
+        )
 
     def _exec_strategy_random(self, request: Request, eligible_npcs: list[Npc], total_said_after_player: int):
-        assert (len(eligible_npcs) > 0)
+        assert eligible_npcs
 
         cfg = self._config.strategy_random
 
@@ -351,10 +358,12 @@ class NpcLlmPickActorService:
 
         # EXAMPLES OF CUSTOM DIRECTOR INSTRUCTIONS
 
-                b.line(f"""## СЦЕНА
+                b.line(
+                    """## СЦЕНА
 Нереварин сразил Дагот Ура, и проклятие снято. Призрачный Предел пал.
 Нереварин прибыл к Вивеку, и у них случается разговор.
-""")
+"""
+                )
 #         b.line(f"""## СЦЕНА
 # Айдис - проверяющая от гильдии бойцов, прибыла в детский сад с проверкой, всё ли в порядке в детском саду.
 # Губерон - писарь, он следует за Айдис и помогает ей в проверке.
@@ -470,7 +479,7 @@ class NpcLlmPickActorService:
                 f"--- Если ты выбираешь персонажа {npc.actor_ref.name}, то выведи в первой строке '{npc.actor_ref.ref_id}'")
 
         # message = "(выбери одного из персонажей, которому на твой взгляд нужно говорить прямо сейчас)"
-        message = f"""(- выбери одного из персонажей, которому на твой взгляд сейчас лучше всего говорить прямо сейчас.
+        message = """(- выбери одного из персонажей, которому на твой взгляд сейчас лучше всего говорить прямо сейчас.
 - Сформулируй причину, почему этот персонаж должен говорить. причину напиши так, будто ты режисер, делающий указание персонажу.
 - Не повторяй свой ответ на предыдущем шаге. Если ты видишь, что тема повторяется и диалог никуда не движется, то предложи персонажу сменить тему.
 - Предлагай персонажам отвечать в стиле высокого фентези, например, в стиле Толкиена. Используй лор Elder Scrolls, но стиль разговоров из Толкиена.
@@ -484,16 +493,16 @@ class NpcLlmPickActorService:
 - Никогда не придумывай квестов или заданий для персонажей. Никогда не требуй от других персонажей показать, на что они способны, или что они могут.
 """
 
-        if sheogorath_level == 'normal':
-            message = message + """
-- Избегай излишней агрессии или беспричинной эскалации.
-- Сохраняй дружелюбный и слегка ироничный стиль диалогов.
-)"""
-        elif sheogorath_level == 'mad':
-            message = message + """
+        if sheogorath_level == 'mad':
+            message += """
 - Не стесняйся излишней агрессии или беспричинной эскалации, делай разговоры резкими, смешными и увлекательными.
 )"""
 
+        elif sheogorath_level == 'normal':
+            message += """
+- Избегай излишней агрессии или беспричинной эскалации.
+- Сохраняй дружелюбный и слегка ироничный стиль диалогов.
+)"""
         self._main_session.reset(
             system_instructions=b.__str__(),
             messages=history_builder.build_history()
@@ -508,7 +517,7 @@ class NpcLlmPickActorService:
         )
 
         if raw_text == 'none':
-            logger.info(f"Director decided to not choose any NPC")
+            logger.info("Director decided to not choose any NPC")
             return NpcLlmPickActorService.Response(actor_to_act=request.player.actor_ref, reason='(director said none)', pass_reason_to_npc=False)
         else:
             parts = raw_text.strip().split("\n")

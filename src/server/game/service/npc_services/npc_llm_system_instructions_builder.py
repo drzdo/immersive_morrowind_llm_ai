@@ -95,8 +95,6 @@ class NpcLlmSystemInstructionsBuilder():
 
         is_inntrader = (d.class_name in ["Трактирщик"]) or d.is_ashfall_innkeeper
         barters: list[str] = []
-        services: list[str] = []
-
         ai = d.ai_config
         if ai.barters_alchemy:
             barters.append("напитками" if is_inntrader else "зельями")
@@ -115,9 +113,12 @@ class NpcLlmSystemInstructionsBuilder():
         if ai.barters_lights:
             barters.append("факелами и фонарями")
         if ai.barters_lockpicks:
-            barters.append("отмычками для отпирания дверей")
-        if ai.barters_lockpicks:
-            barters.append("щупами для обезвреживания ловушек")
+            barters.extend(
+                (
+                    "отмычками для отпирания дверей",
+                    "щупами для обезвреживания ловушек",
+                )
+            )
         if ai.barters_repair_tools:
             barters.append("кузнечными молотами для починки оружия и брони")
         if ai.barters_weapons:
@@ -139,10 +140,8 @@ class NpcLlmSystemInstructionsBuilder():
             towhere = ",".join(map(lambda d: self._cell_name_provider.get_cell_name(d), ai.travel_destinations))
             barters.append(f"оказывает услуги по перемещению в {towhere}")
 
-        if len(barters) > 0:
+        if barters:
             b.sentence(f"{d.name} торгует {",".join(barters)}.")
-        if len(services) > 0:
-            b.sentence(f"{d.name} {",".join(services)}.")
 
         if is_inntrader:
             if d.ashfall_stew_cost:
@@ -224,11 +223,10 @@ class NpcLlmSystemInstructionsBuilder():
 
     def _health(self, b: PromptBuilder, d: NpcData):
         b.paragraph()
-        if d.in_combat:
-            if len(d.hostiles) > 0:
-                names = map(lambda v: v.name, d.hostiles)
-                hostiles = ",".join(names)
-                b.line(f"У {d.name} прямо сейчас сражение с такими противниками как {hostiles}.")
+        if d.in_combat and len(d.hostiles) > 0:
+            names = map(lambda v: v.name, d.hostiles)
+            hostiles = ",".join(names)
+            b.line(f"У {d.name} прямо сейчас сражение с такими противниками как {hostiles}.")
 
         b.line(map_value_in_range(
             d.health_normalized, "{}", 0, 100,
@@ -355,7 +353,7 @@ class NpcLlmSystemInstructionsBuilder():
         he = "Я"
         if not is_it_me:
             he = "Она" if female else "Он"
-        if len(l) > 0:
+        if l:
             b.sentence(f"{he} {", ".join(l)}")
 
     def _player_info(self, npc: Npc, b: PromptBuilder, d: NpcData):
@@ -510,7 +508,8 @@ class NpcLlmSystemInstructionsBuilder():
             if 'name' in npc.actor_ref.ref_id.lower():
                 b.paragraph()
                 b.line(
-                    f"""# Ты - Джиуб, неизвестный узник тюремного корабля имперцев. Никто не знает, кто ты и за что ты арестован.""")
+                    """# Ты - Джиуб, неизвестный узник тюремного корабля имперцев. Никто не знает, кто ты и за что ты арестован."""
+                )
             if 'captain' in npc.actor_ref.ref_id.lower():
                 b.paragraph()
                 b.line(
@@ -668,7 +667,7 @@ class NpcLlmSystemInstructionsBuilder():
 """)
                 item_index = item_index + 1
 
-        if len(other_npcs) > 0:
+        if other_npcs:
             b.paragraph()
             b.line(f"{b.get_option_index_and_inc()}. Ты можешь атаковать других персонажей.")
             b.line(f"- Если ты решаешь атаковать {p.name}, то добавь к ответу 'trigger_attack_PlayerSaveGame'.")
@@ -677,7 +676,7 @@ class NpcLlmSystemInstructionsBuilder():
     - Если ты решаешь атаковать {npc.npc_data.name}, то добавь к ответу 'trigger_attack_{npc.actor_ref.ref_id}'.
     """)
 
-        if len(other_npcs) > 0:
+        if other_npcs:
             b.paragraph()
             b.line(f"{b.get_option_index_and_inc()}. Ты можешь подходить ближе к персонажам.")
             b.line(f"- Если ты хочешь подойти ближе к {p.name}, то добавь к ответу 'trigger_come_PlayerSaveGame'.")
@@ -708,7 +707,7 @@ class NpcLlmSystemInstructionsBuilder():
                 poi_index = poi_index + 1
 
         b.paragraph()
-        if len(messages) > 0:
+        if messages:
             b.line("Вот предыдущие реплики и действия:")
             for m in messages:
                 b.line(m.text)

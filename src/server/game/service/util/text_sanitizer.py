@@ -41,7 +41,4 @@ class TextSanitizer:
         s = ' '.join(s.split())
         s = s.strip()
 
-        if s.startswith(";"):
-            s = s[1:]
-
-        return s
+        return s.removeprefix(";")

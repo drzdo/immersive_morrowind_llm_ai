@@ -14,10 +14,10 @@ class GameTime(BaseModel):
         t = 0
 
         sec_per_h = 3600
-        t = t + self.hour * sec_per_h
-        t = t + self.day * sec_per_h * 24
-        t = t + self.month * sec_per_h * 24 * 30
-        t = t + self.year * sec_per_h * 24 * 30 * 12
+        t += self.hour * sec_per_h
+        t += self.day * sec_per_h * 24
+        t += self.month * sec_per_h * 24 * 30
+        t += self.year * sec_per_h * 24 * 30 * 12
 
         return t
 

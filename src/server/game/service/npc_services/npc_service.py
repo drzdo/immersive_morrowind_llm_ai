@@ -52,8 +52,7 @@ class NpcService:
         self._npc_ref_id_being_queried.add(npc_ref_id)
         try:
             # memory
-            npc_in_memory = self._ref_id_to_npc.get(npc_ref_id, None)
-            if npc_in_memory:
+            if npc_in_memory := self._ref_id_to_npc.get(npc_ref_id, None):
                 if now_ms() > npc_in_memory.npc_data_expire_at_ms:
                     npc_in_memory.npc.npc_data = await self._rpc.get_npc_data(npc_ref_id)
                     self._db.save_npc_data(npc_in_memory.npc)
@@ -61,8 +60,7 @@ class NpcService:
                 return npc_in_memory.npc
 
             # db
-            npc_from_db = self._get_from_database(npc_ref_id)
-            if npc_from_db:
+            if npc_from_db := self._get_from_database(npc_ref_id):
                 self._ref_id_to_npc[npc_ref_id] = _NpcInMemory(
                     npc_from_db,
                     now_ms() + self._npc_data_expiration_ms
@@ -94,9 +92,8 @@ class NpcService:
 
         npcs: list[Npc] = []
         for actor in response.actors:
-            if actor.actor_ref.type == 'creature':
-                if actor.actor_ref.ref_id not in ['vivec_god00000000']:
-                    continue
+            if actor.actor_ref.type == 'creature' and actor.actor_ref.ref_id not in ['vivec_god00000000']:
+                continue
 
             if not actor.can_see and Distance.from_ingame_to_meters(actor.distance_ingame) > 3:
                 continue
@@ -112,10 +109,9 @@ class NpcService:
         return npcs
 
     async def _handle_event(self, event: Event):
-        if event.data.type == 'npc_death':
-            if event.data.actor.ref_id in self._ref_id_to_npc:
-                npc = self._ref_id_to_npc[event.data.actor.ref_id]
-                npc.npc.npc_data.is_dead = True
+        if event.data.type == 'npc_death' and event.data.actor.ref_id in self._ref_id_to_npc:
+            npc = self._ref_id_to_npc[event.data.actor.ref_id]
+            npc.npc.npc_data.is_dead = True
 
     def _get_from_database(self, npc_ref_id: str) -> Npc | None:
         now = self._env_provider.now()

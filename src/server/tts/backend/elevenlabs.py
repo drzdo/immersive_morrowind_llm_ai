@@ -126,7 +126,7 @@ class ElevenlabsTtsBackend(AbstractTtsBackend):
     def _convert_thread(self, thread_index: int):
         Logger.set_ctx("elevenlabs_thread")
 
-        logger = Logger(__name__ + f".thread.{thread_index}")
+        logger = Logger(f"{__name__}.thread.{thread_index}")
         logger.debug("Thread started")
 
         while self._loop.is_running():

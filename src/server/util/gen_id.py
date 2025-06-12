@@ -14,7 +14,4 @@ def gen_id(suffix: str | None = None) -> str:
         _last_ms = ms
         _inc = 0
 
-    if suffix:
-        return f"{ms}.{_inc}_{suffix}"
-    else:
-        return f"{ms}.{_inc}"
+    return f"{ms}.{_inc}_{suffix}" if suffix else f"{ms}.{_inc}"

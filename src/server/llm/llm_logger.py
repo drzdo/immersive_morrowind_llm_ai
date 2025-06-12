@@ -82,7 +82,7 @@ class LlmLogger:
         sorted_file_names = sorted(file_name_to_mtime.items(), key=itemgetter(1))
 
         delete = len(sorted_file_names) - self._config.max_files
-        for x in range(0, delete):
+        for x in range(delete):
             file_name = sorted_file_names[x][0]
             file_path = os.path.join(self._config.directory, file_name)
             os.remove(file_path)
@@ -100,7 +100,7 @@ class LlmLogger:
                 line = lines[index]
                 if line.startswith(s):
                     return index
-                index = index + 1
+                index += 1
 
             if ignore_not_found:
                 return -1
@@ -135,7 +135,7 @@ class LlmLogger:
         system_instructions = join_lines(sys_instructions_0 + 1, sys_instructions_1 - 1)
 
         messages: list[LlmMessage] = []
-        for i in range(0, len(messages_idx)):
+        for i in range(len(messages_idx)):
             message_line_header_index = messages_idx[i]
             m_0 = message_line_header_index + 1
             m_1 = (messages_idx[i + 1] - 1) if (i < (len(messages_idx) - 1)) else (last_message_i - 1)

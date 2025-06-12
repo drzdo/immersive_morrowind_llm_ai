@@ -32,7 +32,8 @@ class VoiceRecognitionInput:
             self.on_stop_listening() # type: ignore
 
     def _handle_click(self, a1, a2, button, isPressed): # type: ignore
-        if button == mouse.Button.right and isPressed:
-            self.on_start_listening()
-        elif button == mouse.Button.right and not isPressed:
-            self.on_stop_listening()
+        if button == mouse.Button.right:
+            if isPressed:
+                self.on_start_listening()
+            else:
+                self.on_stop_listening()

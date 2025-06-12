@@ -26,38 +26,40 @@ class PlayerPersonalStoryService:
 
     def load_story_to_player(self):
         player = self._player_provider.local_player
-        new_story = self._db.load_personal_story(player.actor_ref.ref_id, self._env_provider.now())
-        if new_story:
+        if new_story := self._db.load_personal_story(
+            player.actor_ref.ref_id, self._env_provider.now()
+        ):
             player.personal_story = new_story
             logger.info(f"Player story loaded with {len(new_story.items)} items")
         else:
-            logger.info(f"Player story is empty")
+            logger.info("Player story is empty")
 
     def add_items_to_personal_story(
         self,
         item_data_list: list[StoryItemDataAlias]
     ):
-        if len(item_data_list) == 0:
+        if not item_data_list:
             return
 
         logger.debug(f"Add items to player's story: {item_data_list}")
 
         player = self._player_provider.local_player
         items: list[StoryItem] = []
-        for item_data in item_data_list:
-            items.append(StoryItem(
+        items.extend(
+            StoryItem(
                 item_id=player.personal_story.return_next_item_id_and_inc(),
                 time=self._env_provider.now(),
-                data=item_data
-            ))
-
+                data=item_data,
+            )
+            for item_data in item_data_list
+        )
         player.personal_story.items.extend(items)
         self._db.save_personal_story(player)
 
         self.publish_player_story()
 
     def publish_player_story(self):
-        logger.debug(f"Publish player story to the game")
+        logger.debug("Publish player story to the game")
 
         self._producer.produce_event(Event(
             data=EventDataFromServer.UpdatePlayerBook(
@@ -88,7 +90,7 @@ class PlayerPersonalStoryService:
             d = item.data
 
             if last_time != time:
-                if last_time is None or last_time.day != time.day or last_time.day != time.day or last_time.day != time.day:
+                if last_time is None or last_time.day != time.day:
                     b.line(
                         f"{format_date(time.day, time.month, time.year)}, {self._i18n.format_time(time.hour)}")
                 elif last_time.hour != time.hour:
@@ -103,6 +105,6 @@ class PlayerPersonalStoryService:
 
         text = b.__str__()
         text = text.replace("\n", "<br>")
-        text = text + "<br>"
+        text = f"{text}<br>"
 
         return text

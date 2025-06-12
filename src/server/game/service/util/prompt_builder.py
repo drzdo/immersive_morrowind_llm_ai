@@ -59,7 +59,7 @@ class PromptBuilder:
         all_lines: list[str] = []
 
         for paragraph in self._paragraphs:
-            if len(all_lines) > 0 and len(all_lines[-1]) > 0:
+            if all_lines and len(all_lines[-1]) > 0:
                 all_lines.append("")
 
             for line in paragraph.lines:
@@ -70,14 +70,13 @@ class PromptBuilder:
 
                     if len(sentence) > 0:
                         if sentence[-1] not in [",", ".", "?", "!", ":", "-", ""]:
-                            sentence = sentence + "."
+                            sentence = f"{sentence}."
 
                         final_sentences.append(sentence)
 
                 final_line = " ".join(final_sentences)
                 final_line = final_line.strip()
-                if len(final_line) > 0:
+                if final_line != "":
                     all_lines.append(final_line)
 
-        result = "\n".join(all_lines)
-        return result
+        return "\n".join(all_lines)

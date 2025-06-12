@@ -85,7 +85,7 @@ class MwseTcpEventBusBackend(AbstractEventBusBackend):
             writer.close()
 
     async def _run_server(self):
-        Logger.set_ctx(f"mwse_tcp_server")
+        Logger.set_ctx("mwse_tcp_server")
 
         server = await asyncio.start_server(self._handle_client, 'localhost', self._config.port)
         async with server:

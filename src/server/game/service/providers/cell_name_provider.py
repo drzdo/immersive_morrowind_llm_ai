@@ -16,10 +16,8 @@ class CellNameProvider:
         for filename in files:
             filepath = os.path.join(morrowind_data_dir, filename)
             if os.path.exists(filepath):
-                file = open(filepath, "r", encoding="cp1251")
-                lines = file.readlines()
-                file.close()
-
+                with open(filepath, "r", encoding="cp1251") as file:
+                    lines = file.readlines()
                 for line in lines:
                     components = line.strip().split("\t")
                     if len(components) == 2:
@@ -33,7 +31,7 @@ class CellNameProvider:
     def get_cell_name(self, cell_name: str):
         if cell_name in self._cell_name_to_name:
             return self._cell_name_to_name[cell_name]
-        elif len(cell_name) > 0:
+        elif cell_name != "":
             return cell_name
         else:
             return self._i18n.str("где-то за городом")

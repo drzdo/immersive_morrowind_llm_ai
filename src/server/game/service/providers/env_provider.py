@@ -22,7 +22,7 @@ class EnvProvider:
         return self._env
 
     async def _update_env_loop(self):
-        Logger.set_ctx(f"EnvProvider")
+        Logger.set_ctx("EnvProvider")
 
         while True:
             await asyncio.sleep(15.0)

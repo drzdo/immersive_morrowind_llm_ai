@@ -111,12 +111,4 @@ class NpcLlmResponseProducer:
         )
 
     def _post_process_response_text(self, text_raw: str):
-        text = text_raw.strip()
-
-        # if text.startswith("("):
-        #     til = text.find(")")
-        #     if til > 0:
-        #         text = text[til+1:]
-        # text = text.strip()
-
-        return text
+        return text_raw.strip()

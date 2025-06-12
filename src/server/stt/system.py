@@ -69,8 +69,8 @@ class SttSystem:
         if not self._is_listening:
             return
 
-        current_generation = self._generation_index
         if self._config.delayed_stop_sec > 0:
+            current_generation = self._generation_index
             self._main_event_loop.call_later(
                 self._config.delayed_stop_sec,
                 lambda: self._stop_listening_if_in_same_generation(current_generation)
@@ -83,22 +83,26 @@ class SttSystem:
             self._do_stop_listening()
 
     def _do_stop_listening(self):
-        self._is_listening = False
-        self.stop_listening_at_time = None
-
-        self._backend.stop_listening()
-        self._producer.produce_event(Event(data=EventDataFromServer.SttStopListening(type='stt_stop_listening')))
+        self._finalize_stop_listening()
 
     def _handle_cancel_listening(self):
         if not self._is_listening:
             return
 
         self._is_cancelled = True
+        self._extracted_from__handle_cancel_listening_2()
+
+    def _finalize_stop_listening(self):
         self._is_listening = False
         self.stop_listening_at_time = None
-
         self._backend.stop_listening()
-        self._producer.produce_event(Event(data=EventDataFromServer.SttStopListening(type='stt_stop_listening')))
+        self._producer.produce_event(
+            Event(
+                data=EventDataFromServer.SttStopListening(
+                    type='stt_stop_listening'
+                )
+            )
+        )
 
     def _create_backend(self) -> AbstractSttBackend:
         system = self._config.system

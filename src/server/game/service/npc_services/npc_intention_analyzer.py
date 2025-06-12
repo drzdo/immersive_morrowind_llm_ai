@@ -46,9 +46,9 @@ class NpcIntentionAnalyzer:
     async def process_story_item_data(self, npcs: list[Npc], item_data: StoryItemDataAlias) -> list[StoryItemDataAlias]:
         if item_data.type == 'say_raw' and item_data.speaker.type == 'npc':
             npc_speaker = await self._npc_service.get_npc(item_data.speaker.ref_id)
-            new_list = await self._determine_story_item_data_from_npc_saying(npcs, npc_speaker, item_data.text, item_data.target)
-            return new_list
-
+            return await self._determine_story_item_data_from_npc_saying(
+                npcs, npc_speaker, item_data.text, item_data.target
+            )
         return [item_data]
 
     async def _determine_story_item_data_from_npc_saying(self, npcs: list[Npc], speaker_npc: Npc, text_raw: str, target_ref: Optional[ActorRef]) -> list[StoryItemDataAlias]:
@@ -61,7 +61,7 @@ class NpcIntentionAnalyzer:
 
         #
         text, disposition_change, change_disposition_reasons = self._process_emotional_triggers(text)
-        accumulated_disposition_change = accumulated_disposition_change + disposition_change
+        accumulated_disposition_change += disposition_change
         accumulated_change_disposition_reasons.extend(change_disposition_reasons)
 
         #
@@ -200,7 +200,7 @@ class NpcIntentionAnalyzer:
                 initiator=speaker,
                 victim=self._player_provider.local_player.actor_ref
             ))
-            disposition_change = disposition_change - 100
+            disposition_change -= 100
             change_disposition_reasons.append("trigger_attack_PlayerSaveGame")
 
         if self._has_trigger(trigger="trigger_start_follow", text=text):
@@ -248,7 +248,7 @@ class NpcIntentionAnalyzer:
             ))
 
         dropped_items_count = len(self._dropped_item_provider.dropped_items)
-        for index in range(0, dropped_items_count):
+        for index in range(dropped_items_count):
             trigger = f"trigger_pick_up_item_{index}"
             if self._has_trigger(trigger=trigger, text=text):
                 text = self._delete_trigger_from_text(text=text, trigger=trigger)
@@ -360,9 +360,7 @@ class NpcIntentionAnalyzer:
 
     def _has_trigger(self, *, text: str, trigger: str):
         text_lc = text.lower()
-        trigger_lc = trigger.lower()
-        i0 = text_lc.find(trigger_lc)
-        return i0 >= 0
+        return trigger.lower() in text_lc
 
     def _delete_trigger_from_text(self, *, text: str, trigger: str):
         text_lc = text.lower()
@@ -421,10 +419,9 @@ class NpcIntentionAnalyzer:
                 substr = text[i_said_index:i1]
                 if self._player_provider.local_player.actor_ref.name in substr:
                     return self._player_provider.local_player.actor_ref
-                else:
-                    for npc in npcs:
-                        if npc.actor_ref.name in substr:
-                            return npc.actor_ref
+                for npc in npcs:
+                    if npc.actor_ref.name in substr:
+                        return npc.actor_ref
         return None
 
     async def _determine_target_ref_id_from_prefix_with_name_ref(self, text: str):

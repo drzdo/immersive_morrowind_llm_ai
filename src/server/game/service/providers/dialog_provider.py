@@ -22,29 +22,12 @@ class DialogProvider:
         consumer.register_handler(self._handle_event)
 
     async def _handle_event(self, event: Event):
-        if event.data.type == 'dialog_open':
-            self.is_in_dialog = True
-            self.topics = event.data.topics
-            self.npc_ref = event.data.npc_ref
-        elif event.data.type == 'dialog_update':
-            self.is_in_dialog = True
-            self.topics = event.data.topics
-            self.npc_ref = event.data.npc_ref
-
-            # self._update_story_if_needed(
-            #     self._player_provider.local_player.actor_ref,
-            #     self._player_provider.local_player.personal_story
-            # )
-
-            # if self.npc_ref:
-            #     npc = await self._npc_provider.get_npc(self.npc_ref.ref_id)
-            #     self._update_story_if_needed(
-            #         npc.actor_ref,
-            #         npc.personal_story
-            #     )
-
-        elif event.data.type == 'dialog_close':
+        if event.data.type == 'dialog_close':
             self.is_in_dialog = False
+        elif event.data.type in ['dialog_open', 'dialog_update']:
+            self.is_in_dialog = True
+            self.topics = event.data.topics
+            self.npc_ref = event.data.npc_ref
         elif event.data.type == 'get_local_player_response':
             self.is_in_dialog = event.data.player_data.in_dialog
 

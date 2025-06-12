@@ -51,13 +51,13 @@ class MicrosoftSpeechSttBackend(AbstractSttBackend):
 
         self._is_listening = True
 
-        logger.debug(f"Start listening")
+        logger.debug("Start listening")
         self._speech_recognizer.start_continuous_recognition_async()
 
     def stop_listening(self):
         self._is_listening = False
         self._speech_recognizer.stop_continuous_recognition_async()
-        logger.debug(f"Stop listening")
+        logger.debug("Stop listening")
 
         if not self._started_recognizing:
             self._flush()
@@ -74,8 +74,7 @@ class MicrosoftSpeechSttBackend(AbstractSttBackend):
 
     def _get_accumulated_message(self):
         message = " ".join(self._messages_accumulated) + " " + self._current_message
-        message = message.strip()
-        return message
+        return message.strip()
 
     def _handle_recognizing(self, e): # type: ignore
         logger.debug(f"Recognizing: '{e.result.text}'") # type: ignore

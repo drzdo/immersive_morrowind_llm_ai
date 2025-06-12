@@ -21,7 +21,7 @@ class NpcPersonalStoryService:
         npcs: list[Npc],
         item_data_list: list[StoryItemDataAlias]
     ):
-        if len(item_data_list) == 0:
+        if not item_data_list:
             return
 
         for npc in npcs:

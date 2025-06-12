@@ -38,31 +38,7 @@ class EventProducerFromStory:
 
         for data in item_data_list:
             try:
-                if data.type == 'say_processed':
-                    if say_ctx:
-                        flushed_say_ctx.append(say_ctx)
-
-                    say_ctx = _NpcSayAccumulatedContext()
-                    say_ctx.say_data = data
-                    say_ctx.reaction_list = []
-                elif data.type == 'npc_trigger_dialog_topic':
-                    event_data_to_send.append(
-                        EventDataFromServer.TriggerTopicInDialog(
-                            type='trigger_topic_in_dialog',
-                            topic=data.topic_name
-                        )
-                    )
-                elif data.type == 'npc_pick_up_item':
-                    event_data_to_send.append(
-                        EventDataFromServer.NpcActivate(
-                            type='npc_activate',
-                            npc_ref_id=data.initiator.ref_id,
-                            target_ref_id=data.item_ref_id,
-                            target_pos=None,
-                            dropped_item_id=data.dropped_item_id
-                        )
-                    )
-                elif data.type == 'npc_activate':
+                if data.type == 'npc_activate':
                     event_data_to_send.append(
                         EventDataFromServer.NpcActivate(
                             type='npc_activate',
@@ -72,21 +48,21 @@ class EventProducerFromStory:
                             dropped_item_id=None
                         )
                     )
-                elif data.type == 'npc_travel':
-                    event_data_to_send.append(
-                        EventDataFromServer.NpcTravel(
-                            type='npc_travel',
-                            npc_ref_id=data.initiator.ref_id,
-                            target_ref_id=None,
-                            target_pos=data.destination
-                        )
-                    )
                 elif data.type == 'npc_attack':
                     event_data_to_send.append(
                         EventDataFromServer.NpcStartCombat(
                             type='npc_start_combat',
                             npc_ref_id=data.initiator.ref_id,
                             target_ref_id=data.victim.ref_id,
+                        )
+                    )
+                elif data.type == 'npc_come':
+                    event_data_to_send.append(
+                        EventDataFromServer.NpcTravel(
+                            type='npc_travel',
+                            npc_ref_id=data.initiator.ref_id,
+                            target_ref_id=data.target.ref_id,
+                            target_pos=None
                         )
                     )
                 elif data.type == 'npc_drop_item':
@@ -99,13 +75,14 @@ class EventProducerFromStory:
                             water_amount=data.water_amount
                         )
                     )
-                elif data.type == 'npc_come':
+                elif data.type == 'npc_pick_up_item':
                     event_data_to_send.append(
-                        EventDataFromServer.NpcTravel(
-                            type='npc_travel',
+                        EventDataFromServer.NpcActivate(
+                            type='npc_activate',
                             npc_ref_id=data.initiator.ref_id,
-                            target_ref_id=data.target.ref_id,
-                            target_pos=None
+                            target_ref_id=data.item_ref_id,
+                            target_pos=None,
+                            dropped_item_id=data.dropped_item_id
                         )
                     )
                 elif data.type == 'npc_stop_follow':
@@ -115,6 +92,29 @@ class EventProducerFromStory:
                         range=Distance.from_meters_to_ingame(30)
                     ))
 
+                elif data.type == 'npc_travel':
+                    event_data_to_send.append(
+                        EventDataFromServer.NpcTravel(
+                            type='npc_travel',
+                            npc_ref_id=data.initiator.ref_id,
+                            target_ref_id=None,
+                            target_pos=data.destination
+                        )
+                    )
+                elif data.type == 'npc_trigger_dialog_topic':
+                    event_data_to_send.append(
+                        EventDataFromServer.TriggerTopicInDialog(
+                            type='trigger_topic_in_dialog',
+                            topic=data.topic_name
+                        )
+                    )
+                elif data.type == 'say_processed':
+                    if say_ctx:
+                        flushed_say_ctx.append(say_ctx)
+
+                    say_ctx = _NpcSayAccumulatedContext()
+                    say_ctx.say_data = data
+                    say_ctx.reaction_list = []
                 if say_ctx is not None:
                     if data.type == 'change_disposition':
                         if data.target.type == 'player':
@@ -207,15 +207,15 @@ class EventProducerFromStory:
             if is_in_dialog:
                 # Omit names when in dialog.
                 text = say_ctx.say_data.text
+            elif say_ctx.say_data.target:
+                t = say_ctx.say_data.target
+                text = (
+                    f"{say_ctx.say_data.speaker.name} говорит {t.name}: {say_ctx.say_data.text}"
+                    if t.type == 'npc'
+                    else f"{say_ctx.say_data.speaker.name} говорит мне: {say_ctx.say_data.text}"
+                )
             else:
-                if say_ctx.say_data.target:
-                    t = say_ctx.say_data.target
-                    if t.type == 'npc':
-                        text = f"{say_ctx.say_data.speaker.name} говорит {t.name}: {say_ctx.say_data.text}"
-                    else:
-                        text = f"{say_ctx.say_data.speaker.name} говорит мне: {say_ctx.say_data.text}"
-                else:
-                    text = f"{say_ctx.say_data.speaker.name} думает вслух: {say_ctx.say_data.text}"
+                text = f"{say_ctx.say_data.speaker.name} думает вслух: {say_ctx.say_data.text}"
 
             event_data_to_send.append(EventDataFromServer.ActorSays(
                 type='actor_says',

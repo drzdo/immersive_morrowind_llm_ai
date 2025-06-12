@@ -37,10 +37,9 @@ class PlayerIntentionAnalyzer:
                 messages=[]
             )
 
-            log_context = "\n".join([
-                f"Player intention analyzer",
-                f"Known topics: {known_topics}",
-            ])
+            log_context = "\n".join(
+                ["Player intention analyzer", f"Known topics: {known_topics}"]
+            )
             llm_response = await self._llm_session.send_message(
                 user_text=f"(игрок говорит) {text}",
                 log_name="player_intent",
@@ -79,7 +78,7 @@ class PlayerIntentionAnalyzer:
 
         b.line("Ты наблюдаешь за диалогом игрока и NPC в мире Elder Scrolls Morrowind. Твоя задача - понять, что хочет игрок.")
 
-        if len(known_topics) > 0:
+        if known_topics:
             b.paragraph()
             b.line(f"""
 {b.get_option_index_and_inc()}. Если игрок говорит, что хочет обсудить какой-то вопрос 'предметно', то

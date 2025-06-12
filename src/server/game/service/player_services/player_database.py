@@ -49,7 +49,7 @@ class PlayerDatabase:
                 else:
                     items_happened_later.append(item)
 
-            if len(items_happened_later) > 0:
+            if items_happened_later:
                 backup_filename = sanitize_filename(f"personal_story_backup_{datetime.datetime.now().isoformat()}")
                 logger.warning(
                     f"Personal story of {ref_id} has {len(items_happened_later)} items happened after {time.game_time}, going to back it up to {backup_filename} and remove from the original story")

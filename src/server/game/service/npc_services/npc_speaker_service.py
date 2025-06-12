@@ -75,7 +75,7 @@ class _SceneLock:
 
     def _unlock_if_same_generation(self, expected_generation: int):
         if self._generation == expected_generation:
-            logger.debug(f"Lock scene was acquired and got timed out. Going to unlock...")
+            logger.debug("Lock scene was acquired and got timed out. Going to unlock...")
             self.unlock()
 
 
@@ -321,12 +321,10 @@ class NpcSpeakerService:
             "р", "рр",
             "х", "хх"
         ]
-        i = 0
-        while i < len(replaces):
+        for i in range(0, len(replaces), 2):
             src = replaces[i]
             dst = replaces[i + 1]
             text = text.replace(src, dst)
-            i = i + 2
         return text
 
     async def _produce_voiceover(self, npc: Npc, text: str):
@@ -341,8 +339,7 @@ class NpcSpeakerService:
                 text_processed = self._translit_ashkhan(text_processed)
 
         tts_request = TtsRequest(text=text_processed, voice=npc.personality.voice)
-        tts_response = await self._tts.convert(tts_request)
-        return tts_response
+        return await self._tts.convert(tts_request)
 
     def _send_say_mp3_event(self, npc: Npc, text: str, target: ActorRef | None,
                             tts_response: TtsResponse, duration_sec: float):
@@ -385,26 +382,24 @@ class NpcSpeakerService:
     def _delete_non_verbal_comments(self, text: str):
         while True:
             i0 = text.find('(')
-            if i0 >= 0:
-                i1 = text.find(')', i0 + 1)
-                if i1 >= 0:
-                    text = text[:i0] + text[i1 + 1:]
-                else:
-                    break
-            else:
+            if i0 < 0:
                 break
 
+            i1 = text.find(')', i0 + 1)
+            if i1 >= 0:
+                text = text[:i0] + text[i1 + 1:]
+            else:
+                break
         while True:
             i0 = text.find('[')
-            if i0 >= 0:
-                i1 = text.find(']', i0 + 1)
-                if i1 >= 0:
-                    text = text[:i0] + text[i1 + 1:]
-                else:
-                    break
-            else:
+            if i0 < 0:
                 break
 
+            i1 = text.find(']', i0 + 1)
+            if i1 >= 0:
+                text = text[:i0] + text[i1 + 1:]
+            else:
+                break
         # while True:
         #     i0 = text.find('*')
         #     if i0 >= 0:

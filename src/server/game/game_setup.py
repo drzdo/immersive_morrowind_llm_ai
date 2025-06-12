@@ -115,11 +115,22 @@ class GameSetup:
 
         event_producer_from_story = EventProducerFromStory(event_bus, player_provider, npc_service, i18n)
 
-        #
-        game_master = GameMaster(
-            config, event_bus, event_bus,
-            player_provider, player_story_service,
-            dialog_provider, env_provider,
-            npc_service, npc_behavior_service, npc_speaker_service, npc_personal_story_service, event_producer_from_story,
-            player_intention_analyzer, npc_intention_analyzer, text_sanitizer, i18n, cell_name_provider)
-        return game_master
+        return GameMaster(
+            config,
+            event_bus,
+            event_bus,
+            player_provider,
+            player_story_service,
+            dialog_provider,
+            env_provider,
+            npc_service,
+            npc_behavior_service,
+            npc_speaker_service,
+            npc_personal_story_service,
+            event_producer_from_story,
+            player_intention_analyzer,
+            npc_intention_analyzer,
+            text_sanitizer,
+            i18n,
+            cell_name_provider,
+        )

@@ -52,7 +52,7 @@ class NpcDatabase:
                 else:
                     items_happened_later.append(item)
 
-            if len(items_happened_later) > 0:
+            if items_happened_later:
                 backup_filename = sanitize_filename(f"personal_story_backup_{datetime.datetime.now().isoformat()}")
                 logger.warning(
                     f"Personal story of {npc_ref_id} has {len(items_happened_later)} items happened after {time.game_time}, going to back it up to {backup_filename} and remove from the original story")
@@ -102,18 +102,6 @@ class NpcDatabase:
         )
 
     def load_npc_personality(self, npc_ref_id: str, time: Time) -> NpcPersonality | None:
-        # bg = self._db.load_text(
-        #     path=['npc', npc_ref_id, 'background']
-        # )
-        # if bg is None:
-        #     return None
-
-        personality = self._db.load_model(
-            type=NpcPersonality,
-            path=['npc', npc_ref_id, 'personality']
+        return self._db.load_model(
+            type=NpcPersonality, path=['npc', npc_ref_id, 'personality']
         )
-        # if personality is None:
-        #     return None
-
-        # personality.background = bg
-        return personality

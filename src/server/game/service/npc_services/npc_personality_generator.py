@@ -17,7 +17,7 @@ class NpcPersonalityGenerator():
     async def generate(self, npc_data: NpcData, now: GameTime) -> NpcPersonality:
         pre_text = self._generate_background(npc_data, now)
 
-        personality = NpcPersonality(
+        return NpcPersonality(
             background=pre_text,
             voice=Voice(
                 speaker_ref_id=npc_data.ref_id,
@@ -29,48 +29,9 @@ class NpcPersonalityGenerator():
                     style=random.uniform(0.3, 0.7),
                     similarity_boost=random.uniform(0.3, 0.7),
                 ),
-                accent='none' # TODO: probability based per class
-            )
+                accent='none',  # TODO: probability based per class
+            ),
         )
-
-        return personality
-
-        # Good option, but takes too long.
-        await self._lock.acquire()
-        try:
-            self._llm_session.reset(
-                system_instructions="""Сгенерируй бекграунд персонажа из мира Morrowind Elder Scrolls на базе того, что тебе дали.
-
-1. Добавь персонажу больше интересных и необычных черт личности, и раскрой, откуда он их приобрёл.
-2. Добавь персонажу психологических черт, свойственных его классу. В частности то, как он говорит, в каком стиле.""",
-                messages=[]
-            )
-            text = await self._llm_session.send_message(
-                user_text=f"""Ты - персонаж во вселенной игры Morrowind из Elder Scrolls.
-Тебя зовут {npc_data.name}, ты - {"женщина" if npc_data.female else "мужчина"} расы {npc_data.race.name}.
-Класс - {npc_data.class_name}.
-
-{pre_text}"""
-            )
-
-            personality = NpcPersonality(
-                background=text,
-                voice=Voice(
-                    speaker_ref_id=npc_data.ref_id,
-                    race_id=npc_data.race.id,
-                    female=npc_data.female,
-                    pitch=random.uniform(0.9, 1.1),
-                    elevenlabs=Voice.Elevenlabs(
-                        stability=random.uniform(0.3, 1.0),
-                        style=random.uniform(0.3, 0.7),
-                        similarity_boost=random.uniform(0.3, 0.7),
-                    )
-                )
-            )
-
-            return personality
-        finally:
-            self._lock.release()
 
 
     def _generate_background(self, npc_data: NpcData, now: GameTime) -> str:

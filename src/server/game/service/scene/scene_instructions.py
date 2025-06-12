@@ -41,10 +41,9 @@ class SceneInstructions:
             self._manually_instructed_to_hold_on_instructions = self._config.start_paused
 
     def _handle_press(self, key: keyboard.Key):
-        if hasattr(key, 'vk') and key.__getattribute__('vk') == 110:  # NumPad.
-            if self._manually_instructed_to_hold_on_instructions:
-                self._manually_instructed_to_hold_on_instructions = False
-                logger.info("Manual instructions hold on released")
+        if hasattr(key, 'vk') and key.__getattribute__('vk') == 110 and self._manually_instructed_to_hold_on_instructions:
+            self._manually_instructed_to_hold_on_instructions = False
+            logger.info("Manual instructions hold on released")
 
     def get_next_manual_instruction_for_pick_npc(self, hearing_npcs: list[Npc]) -> ManualInstruction | None:
         if self._config is None:
@@ -54,13 +53,11 @@ class SceneInstructions:
         if self._manually_instructed_to_hold_on_instructions:
             return None
 
-        file = open(self._config.file, 'r', encoding=self._config.encoding)
-        all_lines = file.readlines()
-        file.close()
-
+        with open(self._config.file, 'r', encoding=self._config.encoding) as file:
+            all_lines = file.readlines()
         self.pois = []
 
-        for line_index in range(0, len(all_lines)):
+        for line_index in range(len(all_lines)):
             line_raw = all_lines[line_index]
             line = line_raw.strip().lower()
             if line.startswith("#") or len(line) == 0:
@@ -82,13 +79,11 @@ class SceneInstructions:
                 continue
 
             all_lines[line_index] = f'# {line_raw}'
-            file = open(self._config.file, 'w', encoding=self._config.encoding)
-            file.writelines(all_lines)
-            file.close()
-
+            with open(self._config.file, 'w', encoding=self._config.encoding) as file:
+                file.writelines(all_lines)
             if line == 'hold':
                 self._manually_instructed_to_hold_on_instructions = True
-                logger.info(f"Found manual instruction to hold on")
+                logger.info("Found manual instruction to hold on")
                 return None
 
             components = line.split(' ', 1)
