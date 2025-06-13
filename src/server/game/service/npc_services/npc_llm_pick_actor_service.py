@@ -107,7 +107,7 @@ class NpcLlmPickActorService:
                 )
 
             if request.is_in_dialog:
-                return self._decide_in_dialog(request, exclude_actors)
+                return self._decide_in_dialog(request, exclude_actors, last_said_story_item)
 
             if sheogorath_level is None:
                 response = self._exec_strategy_random(request, eligible_npcs, total_said_after_player)
@@ -193,7 +193,7 @@ class NpcLlmPickActorService:
 
         return (exclude_actors, total_said_after_player, last_said_story_item, sheogorath)
 
-    def _decide_in_dialog(self, request: Request, exclude_actors: list[ActorRef]):
+    def _decide_in_dialog(self, request: Request, exclude_actors: list[ActorRef], last_said_story_item: StoryItem | None):
         if request.target is None:
             logger.warning(f"No target in dialog, fallback to player")
             return NpcLlmPickActorService.Response(
@@ -209,12 +209,19 @@ class NpcLlmPickActorService:
                 reason="(dialog target is excluded)",
                 pass_reason_to_npc=False
             )
-        else:
+
+        if last_said_story_item and last_said_story_item.data.type == 'say_processed' and last_said_story_item.data.speaker.type == 'player' and last_said_story_item.data.target == request.target:
             return NpcLlmPickActorService.Response(
                 actor_to_act=request.target,
                 reason="(dialog target should respond)",
                 pass_reason_to_npc=False
             )
+
+        return NpcLlmPickActorService.Response(
+            actor_to_act=request.player.actor_ref,
+            reason="(fallback to player in dialog)",
+            pass_reason_to_npc=False
+        )
 
     def _exec_strategy_random(self, request: Request, eligible_npcs: list[Npc], total_said_after_player: int):
         assert (len(eligible_npcs) > 0)
