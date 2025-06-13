@@ -77,7 +77,7 @@ class NpcLlmResponseProducer:
 
             if self._llm_system.is_dummy():
                 saying_text = ""
-                for i in request.unprocessed_items:
+                for i in reversed(request.unprocessed_items):
                     if i.data.type == 'say_processed':
                         saying_text = i.data.text
                         break
