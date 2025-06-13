@@ -1,7 +1,7 @@
 local eventbus = require("zdo_immersive_morrowind_ai.common.eventbus")
 local util = require("zdo_immersive_morrowind_ai.common.util")
 local actor_stats = require("zdo_immersive_morrowind_ai.common.actor_stats")
-local ashfall_common = require("mer.ashfall.common.common")
+local ashfall_common = nil
 
 local this = {}
 this.player_book_name = "Journal"

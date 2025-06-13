@@ -182,4 +182,8 @@ function this.ray_test_actor_ref()
     return this.get_actor_ref_from_reference(hit_ref)
 end
 
+function this.is_ashfall_present()
+    return tes3.player and tes3.player.data and tes3.player.data.Ashfall and true
+end
+
 return this

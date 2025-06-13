@@ -1,8 +1,8 @@
 local eventbus = require("zdo_immersive_morrowind_ai.common.eventbus")
 local util = require("zdo_immersive_morrowind_ai.common.util")
 local actor_stats = require("zdo_immersive_morrowind_ai.common.actor_stats")
-local ashfall_common = require("mer.ashfall.common.common")
-local ashfall_config = require("mer.ashfall.config").config
+local ashfall_common = nil
+local ashfall_config = nil
 
 local this = {}
 this.npc_ref_id_to_audio_pitch = {}
@@ -769,7 +769,12 @@ function this.get_npc_data(ref_id)
         end
     end
 
-    local is_ashfall_inkeeper = ashfall_common.helper.isInnkeeper(ref) or false
+    local is_ashfall_inkeeper = false
+    if util.is_ashfall_present() and ashfall_common == nil then
+        ashfall_common = require("mer.ashfall.common.common")
+        ashfall_config = require("mer.ashfall.config").config
+        is_ashfall_inkeeper = ashfall_common.helper.isInnkeeper(ref) or false
+    end
 
     return {
         ref_id = ref_id,
