@@ -228,17 +228,17 @@ class NpcLlmPickActorService:
 
         cfg = self._config.strategy_random
 
-        if total_said_after_player >= cfg.npc_phrases_after_player_max:
-            return NpcLlmPickActorService.Response(
-                actor_to_act=request.player.actor_ref,
-                reason="(dialog took too long)",
-                pass_reason_to_npc=False
-            )
-
         if cfg.npc_phrases_after_player_max == 0:
             return NpcLlmPickActorService.Response(
                 actor_to_act=request.player.actor_ref,
                 reason="(npc_phrases_after_player_max is 0)",
+                pass_reason_to_npc=False
+            )
+
+        if total_said_after_player >= cfg.npc_phrases_after_player_max:
+            return NpcLlmPickActorService.Response(
+                actor_to_act=request.player.actor_ref,
+                reason="(dialog took too long)",
                 pass_reason_to_npc=False
             )
 
@@ -264,10 +264,15 @@ class NpcLlmPickActorService:
 
         if should_end_dialog:
             return NpcLlmPickActorService.Response(
-                actor_to_act=npc_to_respond.actor_ref,
-                reason="придумай причину для окончания диалога, и закончи диалог",
-                pass_reason_to_npc=True
+                actor_to_act=request.player.actor_ref,
+                reason="(dialog was decided to end)",
+                pass_reason_to_npc=False
             )
+            # return NpcLlmPickActorService.Response(
+            #     actor_to_act=npc_to_respond.actor_ref,
+            #     reason="придумай причину для окончания диалога, и закончи диалог",
+            #     pass_reason_to_npc=True
+            # )
         else:
             return NpcLlmPickActorService.Response(
                 actor_to_act=npc_to_respond.actor_ref,
