@@ -416,7 +416,7 @@ scene_instructions:
   encoding: cp1251
 ```
 
-Here's example how to integrate an OpenAPI LLM:
+Here's example how to integrate an OpenAI LLM :
 
 ```yaml
 llm:
@@ -427,6 +427,23 @@ llm:
       api_key: sk-proj-nHi39i9a0tom2R<...>
       model_name: gpt-4o
       base_url: https://api.openai.com/v1
+      max_tokens: 1024 # optional
+      temperature: 0.7 # optional
+```
+
+You can also plug in local LLM via the same OpenAI protocol:
+
+```yaml
+llm:
+  system:
+    type: openai
+
+    openai:
+      api_key: ""
+      model_name: ""
+      base_url: http://localhost:12345
+      max_tokens: 1024
+      temperature: 0.7
 ```
 
 ## Directing
