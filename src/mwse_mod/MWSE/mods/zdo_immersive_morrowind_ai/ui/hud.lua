@@ -152,6 +152,9 @@ function this.handle_actor_says(ref, text, reaction_text, audio_duration_sec)
     if ref == tes3.mobilePlayer.reference then
         return
     end
+    if util.is_in_dialog_menu() then
+        return
+    end
 
     local text_to_show = text
 

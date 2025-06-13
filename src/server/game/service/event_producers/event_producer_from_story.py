@@ -28,7 +28,8 @@ class EventProducerFromStory:
 
     async def publish_events_from_items(
         self,
-        item_data_list: list[StoryItemDataAlias]
+        item_data_list: list[StoryItemDataAlias],
+        is_in_dialog_with_npc: ActorRef | None
     ):
         logger.debug(f"Going to publish events from item data list: {item_data_list}")
 
@@ -203,14 +204,24 @@ class EventProducerFromStory:
                 reaction_text = ", ".join(say_ctx.reaction_list)
 
             text = say_ctx.say_data.text
-            if say_ctx.say_data.target:
-                t = say_ctx.say_data.target
-                if t.type == 'npc':
-                    text = f"{say_ctx.say_data.speaker.name} говорит {t.name}: {say_ctx.say_data.text}"
-                else:
-                    text = f"{say_ctx.say_data.speaker.name} говорит мне: {say_ctx.say_data.text}"
+
+            should_wrap_text_in_names = False
+            if is_in_dialog_with_npc:
+                is_somebody_else_speaking = say_ctx.say_data.speaker.type != 'player' and say_ctx.say_data.speaker != is_in_dialog_with_npc
+                if is_somebody_else_speaking:
+                    should_wrap_text_in_names = True
             else:
-                text = f"{say_ctx.say_data.speaker.name} думает вслух: {say_ctx.say_data.text}"
+                should_wrap_text_in_names = True
+
+            if should_wrap_text_in_names:
+                if say_ctx.say_data.target:
+                    t = say_ctx.say_data.target
+                    if t.type == 'npc':
+                        text = f"{say_ctx.say_data.speaker.name} говорит {t.name}: {say_ctx.say_data.text}"
+                    else:
+                        text = f"{say_ctx.say_data.speaker.name} говорит мне: {say_ctx.say_data.text}"
+                else:
+                    text = f"{say_ctx.say_data.speaker.name} думает вслух: {say_ctx.say_data.text}"
 
             event_data_to_send.append(EventDataFromServer.ActorSays(
                 type='actor_says',
