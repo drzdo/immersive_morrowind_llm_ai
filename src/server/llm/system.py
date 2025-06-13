@@ -43,6 +43,9 @@ class LlmSystem:
         self._backend = self._create_backend()
         self._llm_logger = LlmLogger(config.llm_logger) if config.llm_logger else None
 
+    def is_dummy(self) -> bool:
+        return self._config.system.type == 'dummy'
+
     def _create_backend(self) -> AbstractLlmBackend:
         backend: AbstractLlmBackend
         if self._config.system.type == 'dummy':

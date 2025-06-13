@@ -74,6 +74,18 @@ class NpcLlmResponseProducer:
                 log_name=request.npc.actor_ref.ref_id,
                 log_context=log_context
             )
+
+            if self._llm_system.is_dummy():
+                saying_text = ""
+                for i in request.unprocessed_items:
+                    if i.data.type == 'say_processed':
+                        saying_text = i.data.text
+                        break
+                if saying_text:
+                    raw_text = f'I am dummy {request.npc.actor_ref.name} responding to {saying_text}'
+                else:
+                    raw_text = f'I am dummy {request.npc.actor_ref.name}'
+
             logger.info(f"Got response from LLM in {time.time() - t0} sec")
             processed_text = self._post_process_response_text(raw_text)
 
