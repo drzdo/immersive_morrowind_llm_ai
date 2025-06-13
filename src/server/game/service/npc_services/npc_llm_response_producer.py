@@ -82,7 +82,7 @@ class NpcLlmResponseProducer:
                         saying_text = i.data.text
                         break
                 if saying_text:
-                    raw_text = f'I am dummy {request.npc.actor_ref.name} responding to {saying_text}'
+                    raw_text = f'I am dummy {request.npc.actor_ref.name} responding to {saying_text[:8]}'
                 else:
                     raw_text = f'I am dummy {request.npc.actor_ref.name}'
 
