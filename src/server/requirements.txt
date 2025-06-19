@@ -4,11 +4,14 @@ pathvalidate
 pydantic
 pyyaml
 pynput
+pywin32
 
 # stt
 vosk
 sounddevice
 azure-cognitiveservices-speech
+whisper
+numpy
 
 # tts
 mutagen

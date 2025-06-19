@@ -97,6 +97,22 @@ class NpcIntentionAnalyzer:
         text, data_list_wip = self._process_item_drop(text, speaker_npc.actor_ref)
         result.extend(data_list_wip)
 
+        # If there is npc_start_follow, there should be no npc_come as latter aborts the first.
+        has_npc_start_follow = False
+        for item in result:
+            if item.type == 'npc_start_follow':
+                has_npc_start_follow = True
+                break
+        if has_npc_start_follow:
+            i = 0
+            while i < len(result):
+                item = result[i]
+                if item.type == 'npc_come':
+                    logger.debug("Dropped npc_come due to npc_start_follow")
+                    result.pop(i)
+                    i = i - 1
+                i = i + 1
+
         # Build final list.
         text = self._text_sanitizer.sanitize(text)
 

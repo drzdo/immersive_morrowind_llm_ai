@@ -1,6 +1,7 @@
 import asyncio
 from typing import Literal, Union
 from pydantic import BaseModel, Field
+from stt.backend.whisper import WhisperSttBackend
 from util.logger import Logger
 
 from eventbus.event import Event
@@ -29,7 +30,11 @@ class SttSystem:
             type: Literal['microsoft_speech']
             microsoft_speech: MicrosoftSpeechSttBackend.Config
 
-        system: Union[Dummy, Vosk, MicrosoftSpeech] = Field(discriminator='type')
+        class Whisper(BaseModel):
+            type: Literal['whisper']
+            whisper: WhisperSttBackend.Config
+
+        system: Union[Dummy, Vosk, MicrosoftSpeech, Whisper] = Field(discriminator='type')
         delayed_stop_sec: float
 
     def __init__(self, config: Config, producer: EventProducer):
@@ -104,17 +109,19 @@ class SttSystem:
         system = self._config.system
 
         backend: AbstractSttBackend
-        if system.type == 'dummy':
-            logger.info(f"Speech-to-text system is set to {green('dummy')}")
-            backend = DummySttBackend()
-        elif system.type == 'microsoft_speech':
-            logger.info(f"Speech-to-text system is set to {green('Microsoft Speech')}")
-            backend = MicrosoftSpeechSttBackend(system.microsoft_speech)
-        elif system.type == 'vosk':
-            logger.info(f"Speech-to-text system is set to {green('Vosk')}")
-            backend = VoskSttBackend(system.vosk)
-        else:
-            raise Exception(f"Unknown voice recognition system '{system}'")
+        match system.type:
+            case 'dummy':
+                logger.info(f"Speech-to-text system is set to {green('dummy')}")
+                backend = DummySttBackend()
+            case 'microsoft_speech':
+                logger.info(f"Speech-to-text system is set to {green('Microsoft Speech')}")
+                backend = MicrosoftSpeechSttBackend(system.microsoft_speech)
+            case 'vosk':
+                logger.info(f"Speech-to-text system is set to {green('Vosk')}")
+                backend = VoskSttBackend(system.vosk)
+            case 'whisper':
+                logger.info(f"Speech-to-text system is set to {green('Whisper')}")
+                backend = WhisperSttBackend(system.whisper)
 
         return backend
 
