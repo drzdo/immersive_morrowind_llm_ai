@@ -105,11 +105,25 @@ The most bare minimum setup is to have only LLM without STT and TTS - so you wou
 
 ## STT
 
-Currently, server supports only Vosk and Microsoft Speech.
+Currently, server supports only Vosk, Microsoft Speech and Whisper.
 
 Download Vosk models from here: https://alphacephei.com/vosk/models. For Russian, `vosk-model-small-ru-0.22` works good enough.
 
 For Microsoft Speech, you would need to set up project in Azure Portal https://portal.azure.com, create Speech API key, and paste it in the config.
+
+For Whisper, use this config template:
+
+```yml
+  system:
+    type: whisper
+
+    whisper:
+      device_index: 0
+      model_name: base
+      language: ru
+      device: cuda
+      initial_prompt: Балмора Сейда-Нин Дагот Ур данмер Кай Косадес Вварденфелл
+```
 
 ## TTS
 
