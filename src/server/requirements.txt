@@ -10,7 +10,7 @@ pywin32
 vosk
 sounddevice
 azure-cognitiveservices-speech
-whisper
+openai-whisper
 numpy
 
 # tts
