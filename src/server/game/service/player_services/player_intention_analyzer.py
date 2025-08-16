@@ -1,9 +1,9 @@
 import asyncio
-from typing import Literal, Optional
-from eventbus.data.actor_ref import ActorRef
-from game.service.util.prompt_builder import PromptBuilder
+from typing import Literal, Union
+from game.data.npc import Npc
+from game.service.util.llm_json_fixer import LlmJsonFixer
 from util.logger import Logger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from llm.system import LlmSystem
 
@@ -11,117 +11,166 @@ from llm.system import LlmSystem
 logger = Logger(__name__)
 
 
-class PlayerIntentionAnalyzer:
-    class Response(BaseModel):
-        trigger_dialog_topic: str | None = None
-        list_available_dialog_topics: bool = False
-        npc_stop_follow: bool = False
-        npc_shut_up: bool = False
-        npc_stop_combat: bool = False
-        sheogorath_level: Literal['normal', 'mad'] | None = None
+class RequestInDialog(BaseModel):
+    player_text: str
+    known_topics: list[str]
+    target: Npc
 
+
+class RequestNotInDialog(BaseModel):
+    player_text: str
+    npcs: list[Npc]
+
+# ---
+
+
+class ResponseDataCommon:
+    class StopFollow(BaseModel):
+        type: Literal['stop_follow']
+
+    class GameMasterUpdateNpcMemory(BaseModel):
+        type: Literal['gamemaster_update_npc_memory']
+        npc_ref_ids: list[str]
+
+    class GameMasterStopCombat(BaseModel):
+        type: Literal['gamemaster_stop_combat']
+
+    union = Union[
+        StopFollow,
+        GameMasterUpdateNpcMemory,
+        GameMasterStopCombat,
+    ]
+
+
+_JSON_FORMAT_COMMON = """
+type Response = {
+    // Игрок как game master хочет изменить память одного или нескольких NPC.
+    type: "gamemaster_update_npc_memory"
+
+    // Список ref_id тех NPC, память которых хочет изменить игрок.
+    npc_ref_ids: string[]
+}"""
+
+# ---
+
+
+class ResponseInDialog(BaseModel):
+    class TriggerTopic(BaseModel):
+        type: Literal['trigger_dialog_topic']
+        topic: str
+
+    class ListTopics(BaseModel):
+        type: Literal['list_dialog_topics']
+
+    data: Union[
+        ResponseDataCommon.union,
+        ResponseDataInDialog.TriggerTopic,
+        ResponseDataInDialog.ListTopics,
+    ] = Field(discriminator='type')
+
+
+_JSON_FORMAT_IN_DIALOG = """ | {
+    // Игрок конкретно просит NPC поговорить на одну из конкретных тем, которые известны NPC.
+    type: "trigger_dialog_topic"
+
+    // Как дословно называется эта тема.
+    topic: string
+} | {
+    // Игрок просит NPC рассказать, на какие темы с этим NPC можно поговорить.
+    type: "list_dialog_topics"
+}
+"""
+
+# ---
+
+
+class ResponseNotInDialog(BaseModel):
+    data: Union[
+        ResponseDataCommon.union,
+        ResponseDataCommon.union,
+    ] = Field(discriminator='type')
+
+
+_JSON_FORMAT_NOT_IN_DIALOG = """"""
+
+
+class PlayerIntentionAnalyzer:
     def __init__(self, llm: LlmSystem) -> None:
         self._llm_session = llm.create_session()
         self._lock = asyncio.Lock()
+        self._json_fixer = LlmJsonFixer(self._llm_session)
 
-    async def analyze_player_intention(self, text: str, known_topics: list[str], target: Optional[ActorRef]) -> Response:
-        if "лично" in text:  # i18n
-            return PlayerIntentionAnalyzer.Response()
-
+    async def analyze_player_intention_in_dialog(self, request: RequestInDialog) -> ResponseInDialog:
         await self._lock.acquire()
         try:
-            instructions = self._build_instructions(text, known_topics, target)
+            instructions = """Ты наблюдаешь за диалогом игрока и NPC в мире Elder Scrolls Morrowind.
+Игрок может сказать что-то от имени своего персонажа, а может сказать что-то от имени режисёра (он же game master, dungeon master).
+Твоя задача - понять, что хочет игрок и напечатать вывод в формате JSON:
+
+""" + _JSON_FORMAT_COMMON + _JSON_FORMAT_IN_DIALOG + """
+
+Например, твой вывод может быть
+
+```json
+{
+    type: "trigger_dialog_topic"
+    topic: "Биография"
+}
+```
+
+или другой пример:
+
+```json
+{
+    type: "gamemaster_update_npc_memory"
+    npc_ref_ids: ["caius cosades00000000"]
+}
+```
+"""
 
             self._llm_session.reset(
                 system_instructions=instructions,
                 messages=[]
             )
 
-            log_context = "\n".join([
-                f"Player intention analyzer",
-                f"Known topics: {known_topics}",
-            ])
-            llm_response = await self._llm_session.send_message(
-                user_text=f"(игрок говорит) {text}",
-                log_name="player_intent",
-                log_context=log_context
-            )
-
-            response = PlayerIntentionAnalyzer.Response()
-
-            lines = llm_response.split("\n")
-            for line in lines:
-                line = line.strip()
-                if line.startswith('trigger_dialog_topic'):
-                    triggered_topic = line.split(':')[1].strip()
-                    response.trigger_dialog_topic = self._match_exact_topic_name(known_topics, triggered_topic)
-                if line.startswith('list_available_dialog_topics'):
-                    response.list_available_dialog_topics = True
-                if line.startswith('npc_shut_up'):
-                    response.npc_shut_up = True
-                if line.startswith('npc_stop_combat'):
-                    response.npc_stop_combat = True
-                if line.startswith('npc_stop_follow'):
-                    response.npc_stop_follow = True
-                if line.startswith('npc_sheogorath_normal'):
-                    response.sheogorath_level = 'normal'
-                if line.startswith('npc_sheogorath_mad'):
-                    response.sheogorath_level = 'mad'
-
-            logger.debug(f"Player intention from {text} is {response}")
-
-            return response
+            llm_response = await self._llm_session.send_message(user_text=f"(игрок говорит) {request.player_text}")
+            return await self._json_fixer.fix_json(ResponseInDialog, _JSON_FORMAT_COMMON + _JSON_FORMAT_IN_DIALOG, llm_response)
         finally:
             self._lock.release()
 
-    def _build_instructions(self, text: str, known_topics: list[str], target: Optional[ActorRef]) -> str:
-        b = PromptBuilder()
+    async def analyze_player_intention_not_in_dialog(self, request: RequestNotInDialog) -> ResponseNotInDialog:
+        await self._lock.acquire()
+        try:
+            instructions = """Ты наблюдаешь за разговоров игрока и NPC-ей в мире Elder Scrolls Morrowind.
+Игрок может сказать что-то от имени своего персонажа, а может сказать что-то от имени режисёра (он же game master, dungeon master).
+Твоя задача - понять, что хочет игрок и напечатать вывод в формате JSON:
 
-        b.line("Ты наблюдаешь за диалогом игрока и NPC в мире Elder Scrolls Morrowind. Твоя задача - понять, что хочет игрок.")
+""" + _JSON_FORMAT_COMMON + _JSON_FORMAT_NOT_IN_DIALOG + """
 
-        if len(known_topics) > 0:
-            b.paragraph()
-            b.line(f"""
-{b.get_option_index_and_inc()}. Если игрок говорит, что хочет обсудить какой-то вопрос 'предметно', то
-- найди из списка тем ту, которая наиболее близко связана с вопросом игрока,
-- и выведи 'trigger_dialog_topic:TOPIC', где вместо TOPIC подставь имя темы.
-Вот список тем: {', '.join(known_topics)}.
-Например, у тебя такой список тем: 'задания, вступить в Гильдию магов'.
-Если игрок говорит 'я хочу предметно обсудить следующее распоряжение', то наиболее близкой темой будет 'задания', и поэтому ты выведешь 'trigger_dialog_topic:задания'.
-Если же игрок говорит 'я хотел бы обсудить вступление в гильдию предметно', то наиболее близкой темой будет 'вступить в Гильдию магов', и поэтому ты выведешь 'trigger_dialog_topic:вступить в Гильдию магов'
-""")
+Например, твой вывод может быть
 
-        b.paragraph()
-        b.line(f"""
-{b.get_option_index_and_inc()}. Если игрок спрашивает, на какие темы вы можете поговорить 'предметно' - то выведи 'list_available_dialog_topics'.
-""")
+```json
+{
+    type: "gamemaster_stop_combat"
+}
+```
 
-        b.paragraph()
-        b.line(f"""
-{b.get_option_index_and_inc()}. Если игрок хочет, чтобы NPC замолчали, то выведи 'npc_shut_up'.
-{b.get_option_index_and_inc()}. Если игрок хочет, чтобы NPC прекратили драку, то выведи 'npc_stop_combat'.
-{b.get_option_index_and_inc()}. Если игрок хочет, чтобы NPC прекратили следовать за ним, то выведи 'npc_stop_follow'.
-""")
+или другой пример:
 
-        if target is None:
-            b.line(f"""
-    {b.get_option_index_and_inc()}. Если игрок интересуется мнением других и при этом их оскорбляет - то выведи 'npc_sheogorath_mad'.
-    {b.get_option_index_and_inc()}. Если игрок вежливо интересуется соображениями, мыслями, позицией других - то выведи 'npc_sheogorath_normal'.
-    """)
+```json
+{
+    type: "gamemaster_update_npc_memory"
+    npc_ref_ids: ["caius cosades00000000"]
+}
+```
+"""
 
-        b.paragraph()
-        b.line(
-            f"{b.get_option_index_and_inc()}. Если ни одно из условий выше не применимо, то выведи 'none'."
-        )
+            self._llm_session.reset(
+                system_instructions=instructions,
+                messages=[]
+            )
 
-        return b.__str__()
-
-    def _match_exact_topic_name(self, known_topics: list[str], triggered_topic: str):
-        triggered_topic_lc = triggered_topic.lower()
-
-        for topic in known_topics:
-            if topic.lower() == triggered_topic_lc:
-                return topic
-
-        logger.warning(f"Cannot match triggered topic with any of known topics: {triggered_topic} known={known_topics}")
-        return triggered_topic
+            llm_response = await self._llm_session.send_message(user_text=f"(игрок говорит) {request.player_text}")
+            return await self._json_fixer.fix_json(ResponseNotInDialog, _JSON_FORMAT_COMMON + _JSON_FORMAT_NOT_IN_DIALOG, llm_response)
+        finally:
+            self._lock.release()

@@ -18,6 +18,10 @@ class Database:
 
         os.makedirs(self._root_dir, exist_ok=True)
 
+    def exists(self, *, path: list[str]) -> bool:
+        filepath = self._get_filepath_text(path)
+        return os.path.exists(filepath)
+
     def save_model(self, *, path: list[str], value: BaseModel) -> None:
         d = value.model_dump(mode='json')
         text = yaml.dump(d, allow_unicode=True)
@@ -38,6 +42,12 @@ class Database:
         text = self._load(filepath)
         d = yaml.safe_load(text)
         return type.model_validate(d)
+
+    def load_model_force[T: BaseModel](self, *, type: type[T], path: list[str] = []) -> T:
+        model = self.load_model(type=type, path=path)
+        if model is None:
+            raise Exception(f"There must be a model at {path} of type {type}")
+        return model
 
     def load_text(self, *, path: list[str] = []) -> str | None:
         filepath = self._get_filepath_text(path)

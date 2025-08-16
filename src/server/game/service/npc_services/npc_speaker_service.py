@@ -332,7 +332,7 @@ class NpcSpeakerService:
     async def _produce_voiceover(self, npc: Npc, text: str):
         text_processed = self._delete_non_verbal_comments(text)
 
-        match npc.personality.voice.accent:
+        match npc.voice.accent:
             case 'none':
                 pass
             case 'translit':
@@ -340,7 +340,7 @@ class NpcSpeakerService:
             case 'ashkhan':
                 text_processed = self._translit_ashkhan(text_processed)
 
-        tts_request = TtsRequest(text=text_processed, voice=npc.personality.voice)
+        tts_request = TtsRequest(text=text_processed, voice=npc.voice)
         tts_response = await self._tts.convert(tts_request)
         return tts_response
 
@@ -361,7 +361,7 @@ class NpcSpeakerService:
                 type='npc_say_mp3',
                 npc_ref_id=npc.actor_ref.ref_id,
                 file_path=adjusted_file_path,
-                pitch=1.0 if tts_response.is_pitch_already_applied else npc.personality.voice.pitch,
+                pitch=1.0 if tts_response.is_pitch_already_applied else npc.voice.pitch,
                 target_ref_id=target.ref_id if target else None,
                 duration_sec=duration_sec
             )

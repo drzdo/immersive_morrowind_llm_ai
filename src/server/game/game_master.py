@@ -22,7 +22,7 @@ from game.i18n.i18n import I18n
 from game.service.providers.dialog_provider import DialogProvider
 from game.service.providers.env_provider import EnvProvider
 from game.service.event_producers.event_producer_from_story import EventProducerFromStory
-from game.service.player_services.player_intention_analyzer import PlayerIntentionAnalyzer
+from game.service.player_services.player_intention_analyzer import PlayerIntentionAnalyzer, RequestInDialog
 from game.service.npc_services.npc_behavior_service import NpcBehaviorService
 from game.service.npc_services.npc_personal_story_service import NpcPersonalStoryService
 from game.service.npc_services.npc_service import NpcService
@@ -315,10 +315,54 @@ class GameMaster:
         return hearing_npcs
 
     async def _determine_story_item_data_from_player_saying(self, text_raw: str) -> list[StoryItemDataAlias]:
-        target_ref = self._get_player_target()
-        known_topics = list(map(lambda topic: topic.topic_text, self._dialog_provider.topics))
-
         text = self._text_sanitizer.sanitize(text_raw)
+
+        should_add_original_say_text = True
+        item_data_list_from_player: list[StoryItemDataAlias] = []
+
+        if self._dialog_provider.is_in_dialog:
+            target_ref = self._get_player_target()
+            if target_ref is None:
+                logger.error("dialog_provider says player is in dialog, but there is no target_ref")
+                return []
+
+            known_topics = list(map(lambda topic: topic.topic_text, self._dialog_provider.topics))
+            response = await self._player_intention_analyzer.analyze_player_intention_in_dialog(
+                RequestInDialog(
+                    player_text=text,
+                    known_topics=known_topics,
+                    target=await self._npc_service.get_npc(target_ref.ref_id)
+                )
+            )
+
+            data = response.data
+            match data.type:
+                case 'list_dialog_topics':
+                    item_data_list_from_player.append(
+                        StoryItemData.PlayerTriggerListDialogTopics(
+                            type='player_trigger_list_dialog_topics',
+                            speaker=self._player_provider.local_player.actor_ref,
+                            target=target_ref,
+                            original_text=text
+                        )
+                    )
+                    should_add_original_say_text = False
+                case 'trigger_dialog_topic':
+                    item_data_list_from_player.append(
+                        StoryItemData.PlayerTriggerDialogTopic(
+                            type='player_trigger_dialog_topic',
+                            speaker=self._player_provider.local_player.actor_ref,
+                            target=target_ref,
+                            original_text=text,
+                            trigger_topic=data.topic
+                        )
+                    )
+                    should_add_original_say_text = False
+                case 'stop_follow':
+
+
+
+
         player_intention = await self._player_intention_analyzer.analyze_player_intention(text, known_topics, target_ref)
 
         item_data_list_from_player: list[StoryItemDataAlias] = []
