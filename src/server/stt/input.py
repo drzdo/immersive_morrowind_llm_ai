@@ -16,7 +16,7 @@ class VoiceRecognitionInput:
         listener_k.start()
 
         listener_m = mouse.Listener(on_click=self._handle_click)  # type: ignore
-        # listener_m.start()
+        listener_m.start()
 
         self.on_start_listening: Callable[[], None]
         self.on_stop_listening: Callable[[], None]

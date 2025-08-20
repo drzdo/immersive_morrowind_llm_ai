@@ -101,7 +101,7 @@ class WhisperSttBackend(AbstractSttBackend):
                             self._recognized_texts.append(text) # type: ignore
                             self._lock.release_lock()
 
-                    time.sleep(1.0 / 60.0)
+                    time.sleep(1.0 / 500.0)
 
         except Exception as e:
             logger.error(f"Whisper error: {str(e)}")

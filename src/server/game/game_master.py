@@ -5,7 +5,9 @@ from app.app_config import AppConfig
 from eventbus.event import Event
 from eventbus.event_data.event_data_from_server import EventDataFromServer
 from eventbus.event_producer import EventProducer
+from game.service.npc_services.npc_database import NpcDatabase
 from game.service.npc_services.npc_intention_analyzer import NpcIntentionAnalyzer
+from game.service.npc_services.npc_llm_pick_actor_service import NpcLlmPickActorService
 from game.service.npc_services.npc_speaker_service import NpcSpeakerService
 from game.service.player_services.player_personal_story_service import PlayerPersonalStoryService
 from game.service.providers.cell_name_provider import CellNameProvider
@@ -43,8 +45,10 @@ class GameMaster:
         player_story_service: PlayerPersonalStoryService,
         dialog_provider: DialogProvider,
         env_provider: EnvProvider,
+        npc_db: NpcDatabase,
         npc_service: NpcService,
         npc_behavior_service: NpcBehaviorService,
+        pick_actor_service: NpcLlmPickActorService,
         npc_speaker_service: NpcSpeakerService,
         npc_personal_story_service: NpcPersonalStoryService,
         event_producer_from_story: EventProducerFromStory,
@@ -62,8 +66,10 @@ class GameMaster:
 
         self._dialog_provider = dialog_provider
         self._env_provider = env_provider
+        self._npc_db = npc_db
         self._npc_service = npc_service
         self._npc_behavior_service = npc_behavior_service
+        self._pick_actor_service = pick_actor_service
         self._npc_speaker_service = npc_speaker_service
         self._npc_personal_story_service = npc_personal_story_service
         self._event_producer_from_story = event_producer_from_story
@@ -179,6 +185,19 @@ class GameMaster:
             hearable_npcs = await self._get_npcs_who_can_hear_player(None)
             hearable_actors = list(map(lambda n: n.actor_ref, hearable_npcs))
             await self._npc_speaker_service.npcs_shut_up(lambda a: a not in hearable_actors)
+        elif event.data.type == 'cmd_from_game':
+            if event.data.cmd == 'sheo':
+                self._pick_actor_service.manual_mode = 'sheo'
+            elif event.data.cmd == 'easy':
+                self._pick_actor_service.manual_mode = 'one'
+            elif event.data.cmd == 'random':
+                self._pick_actor_service.manual_mode = 'random'
+            elif event.data.cmd == 'gen' and event.data.target and event.data.args:
+                npc = await self._npc_service.get_npc(event.data.target.ref_id)
+                update: str = event.data.args
+                if npc:
+                    await self._npc_service.alter_npc_background(npc, update)
+
 
     async def _on_local_player_speak(self, text: str):
         item_data_list_from_player = await self._determine_story_item_data_from_player_saying(text)

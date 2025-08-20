@@ -66,6 +66,8 @@ class NpcLlmPickActorService:
 
         self._scene_instructions = scene_instructions
 
+        self.manual_mode: Literal['one', 'random', 'sheo'] = 'one'
+
     async def pick_npc_to_act(self, request: Request) -> Response:
         manual_response = self._scene_instructions.get_next_manual_instruction_for_pick_npc(request.hearing_npcs)
         if manual_response:
@@ -73,11 +75,13 @@ class NpcLlmPickActorService:
 
         await self._main_session_lock.acquire()
         try:
-            exclude_actors, total_said_after_player, last_said_story_item, sheogorath = self._gather_data_from_story_items(request)
-            sheogorath_level = sheogorath.sheogorath_level if sheogorath else None
+            exclude_actors, total_said_after_player, last_said_story_item, _sheogorath = self._gather_data_from_story_items(request)
+            # sheogorath_level = sheogorath.sheogorath_level if sheogorath else None
 
-            if self._config.force_sheogorath_level is not None:
-                sheogorath_level = self._config.force_sheogorath_level
+            # if self._config.force_sheogorath_level is not None:
+            #     sheogorath_level = self._config.force_sheogorath_level
+            # if self.manual_mode == 'sheo':
+            #     sheogorath_level = 'normal'
 
             if last_said_story_item:
                 last_say_initiator = NpcStoryItemHelper.get_initiator(last_said_story_item.data)
@@ -109,44 +113,52 @@ class NpcLlmPickActorService:
             if request.is_in_dialog:
                 return self._decide_in_dialog(request, exclude_actors, last_said_story_item)
 
-            if sheogorath_level is None:
+            if self.manual_mode == 'sheo':
+                return await self._exec_strategy_sheogorath(request, eligible_npcs, 'normal')
+
+            response = NpcLlmPickActorService.Response(
+                actor_to_act=request.player.actor_ref,
+                reason="(no eligible npcs to speak)",
+                pass_reason_to_npc=False
+            )
+
+            if self.manual_mode == 'random':
                 response = self._exec_strategy_random(request, eligible_npcs, total_said_after_player)
 
-                if response.actor_to_act.type == 'player':
-                    silence_duration_ms: int
-                    if last_said_story_item:
-                        silence_duration_ms = now_ms() - last_said_story_item.time.real_time_ms
-                    else:
-                        silence_duration_ms = now_ms() - self._random_comment_last_ms
+            if response.actor_to_act.type == 'player':
+                silence_duration_ms: int = 0
+                if last_said_story_item:
+                    silence_duration_ms = now_ms() - last_said_story_item.time.real_time_ms
+                else:
+                    silence_duration_ms = now_ms() - self._random_comment_last_ms
 
-                    if silence_duration_ms > self._config.random_comment_delay_sec:
-                        if random.random() < self._config.random_comment_proba:
-                            self._random_comment_last_ms = now_ms()
+                if (silence_duration_ms / 1000.0) > self._config.random_comment_delay_sec:
+                    if random.random() < self._config.random_comment_proba:
+                        self._random_comment_last_ms = now_ms()
 
-                            l: list[str] = [
-                                "прокомментируй как будто думая вслух текущую погоду и время",
-                                f"прокомментируй как будто думая вслух твое отношение к {request.player.actor_ref.name}",
-                                f"прокомментируй как будто думая вслух состояние {request.player.actor_ref.name}",
-                                "прокомментируй как будто думая вслух ваше текущее местоположение",
-                                "прокомментируй как будто думая вслух свою или чужую одежду",
-                                "сочини как будто думая вслух короткий стих про Морровинд",
-                                "прокомментируй как будто думая вслух красоту окружения вокруг (придумай детали если надо)",
-                                "прокомментируй как будто думая вслух последнее что произошло с тобой недавно",
-                            ]
-                            reason = random.choice(l)
+                        l: list[str] = [
+                            "прокомментируй как будто думая вслух текущую погоду и время",
+                            f"прокомментируй как будто думая вслух твое отношение к {request.player.actor_ref.name}",
+                            f"прокомментируй как будто думая вслух состояние {request.player.actor_ref.name}",
+                            "прокомментируй как будто думая вслух ваше текущее местоположение",
+                            "прокомментируй как будто думая вслух свою или чужую одежду",
+                            "сочини как будто думая вслух короткий стих про Морровинд",
+                            "прокомментируй как будто думая вслух красоту окружения вокруг (придумай детали если надо)",
+                            "прокомментируй как будто думая вслух последнее что произошло с тобой недавно",
+                        ]
+                        reason = random.choice(l)
 
-                            if random.random() < 0.03:
-                                reason = "сочини как будто думая вслух короткий матерных стих про Морровинд"
+                        if random.random() < 0.03:
+                            reason = "сочини как будто думая вслух короткий матерных стих про Морровинд"
 
-                            return NpcLlmPickActorService.Response(
-                                actor_to_act=random.choice(eligible_npcs).actor_ref,
-                                reason=reason,
-                                pass_reason_to_npc=True
-                            )
+                        return NpcLlmPickActorService.Response(
+                            actor_to_act=random.choice(eligible_npcs).actor_ref,
+                            reason=reason,
+                            pass_reason_to_npc=True
+                        )
 
-                return response
+            return response
 
-            return await self._exec_strategy_sheogorath(request, eligible_npcs, sheogorath_level)
         finally:
             self._main_session_lock.release()
 
@@ -178,8 +190,8 @@ class NpcLlmPickActorService:
                     said_after_player[last_said_actor] = v + 1
 
                     total_said_after_player = total_said_after_player + 1
-            elif item.data.type == 'player_trigger_sheogorath_level':
-                sheogorath = item.data
+            # elif item.data.type == 'player_trigger_sheogorath_level':
+            #     sheogorath = item.data
 
         for actor in said_after_player:
             count = said_after_player[actor]

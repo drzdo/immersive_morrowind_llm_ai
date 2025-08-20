@@ -32,6 +32,8 @@ class NpcService:
                  llm_session: LlmSession) -> None:
         self._rpc = rpc
         self._db = db
+
+        self._llm_session = llm_session
         self._npc_personality_generator = NpcPersonalityGenerator(llm_session)
 
         self._env_provider = env_provider
@@ -44,6 +46,30 @@ class NpcService:
 
     def clear_cache(self):
         self._ref_id_to_npc.clear()
+
+    async def alter_npc_background(self, npc: Npc, update: str):
+        self._llm_session.reset(
+            system_instructions=f'''
+Тебе будет дан бекграунд персонажа из мира Elder Scrolls Morrowind.
+
+Твоя задача - изменить бекграунд согласно запросу и вернуть обновленный бекграунд.
+Изменяя бекграунд, делай это творчески, не стесняйся менять предысторию, если так будет интереснее.
+
+В ответе выводи только лишь измененный бекграунд.
+
+Вот оригинальный бекграунд персонажа:
+
+{npc.personality.background}
+''',
+            messages=[]
+        )
+        new_bg = await self._llm_session.send_message(
+            user_text=update
+        )
+        logger.info(f"Original NPC background:\n{npc.personality.background}")
+        logger.info(f"New NPC background:\n{new_bg}")
+        npc.personality.background = new_bg
+        self._db.save_npc_personality(npc)
 
     async def get_npc(self, npc_ref_id: str) -> Npc:
         while npc_ref_id in self._npc_ref_id_being_queried:

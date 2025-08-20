@@ -177,7 +177,7 @@ class NpcLlmSystemInstructionsBuilder():
         b.sentence(f"Текущее время: {self._i18n.format_time(env.current_hour)}, {daypart}.")
         b.sentence(f"Текущая погода: {env.current_weather}.")
 
-        if env.ashfall:
+        if env.ashfall and env.ashfall.weatherTemp:
             map_value_in_range(
                 env.ashfall.weatherTemp, "Температура воздуха снаружи {}", -100, 100,
                 ["чрезвычайно холодная", "очень холодная", "холодная", "прохладная",
@@ -444,38 +444,38 @@ class NpcLlmSystemInstructionsBuilder():
                 e.ashfall.thirst, f"{p.name} {"{}"}", 0, 100,
                 ["не испытывает жажду", "слегка хочет пить", "хочет пить",
                  "очень хочет пить", "испытывает обезвоживание"]
-            ))
+            )) if e.ashfall.thirst else None
             b.sentence(map_value_in_range(
                 e.ashfall.hunger, f"{p.name} {"{}"}", 0, 100,
                 ["сыт", "немного хочет есть", "хочет есть",
                  "очень хочет есть", "испытывает большой голод"]
-            ))
+            )) if e.ashfall.hunger else None
             b.sentence(map_value_in_range(
                 e.ashfall.tiredness, f"{p.name} {"{}"}", 0, 100,
                 ["бодр", "отдохнул", "устал", "очень устал", "измучен и чрезвычайно устал"]
-            ))
+            )) if e.ashfall.tiredness else None
             b.sentence(map_value_in_range(
                 e.ashfall.temp, "{}", -100, 100,
                 [f"{p.name} замерзает", f"{p.name} очень холодно", f"{p.name} холодно", f"{p.name} прохладно",
                  f"{p.name} комфортно в плане температуры", f"{p.name} комфортно в плане температуры",
                  f"{p.name} тепло", f"{p.name} жарко", f"{p.name} очень жарко", f"{p.name} под изнуряющим палящим зноем"]
-            ))
+            )) if e.ashfall.temp else None
 
-            if e.ashfall.foodPoison > 60:
+            if e.ashfall.foodPoison and e.ashfall.foodPoison > 60:
                 b.sentence(map_value_in_range(
                     e.ashfall.foodPoison, f"{p.name} {"{}"}.", 0, 100,
                     ["ничем не отравлен", "ничем не отравлен", "ничем не отравлен", "как будто бы чем-то траванулся",
                      "получил пищевое отравление"]
                 ))
 
-            if e.ashfall.dysentery > 60:
+            if e.ashfall.dysentery and e.ashfall.dysentery > 60:
                 b.sentence(map_value_in_range(
                     e.ashfall.dysentery, f"{p.name} {"{}"}.", 0, 100,
                     ["ничем не отравлен", "ничем не отравлен", "ничем не отравлен", "как будто бы чем-то траванулся",
                      "подхватил дизентерию"]
                 ))
 
-            if e.ashfall.flu > 60:
+            if e.ashfall.flu and e.ashfall.flu > 60:
                 b.sentence(map_value_in_range(
                     e.ashfall.flu, f"{p.name} {"{}"}.", 0, 100,
                     ["ничем не болен", "ничем не болен", "ничем не болен", "как будто бы простудился",
@@ -485,7 +485,7 @@ class NpcLlmSystemInstructionsBuilder():
             b.sentence(map_value_in_range(
                 e.ashfall.wetness, f"{p.name} {"{}"}", 0, 100,
                 ["сухой", "слегка намок", "мокрый", "промокший насквозь"]
-            ))
+            )) if e.ashfall.wetness else None
 
             if e.ashfall.nearCampfire:
                 b.sentence(f"{p.name} и {d.name} находитесь у костра.")

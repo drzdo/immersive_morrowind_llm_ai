@@ -18,7 +18,7 @@ this.connection_maintaining_loop_started = false
 
 function this.produce_event_from_game(e)
     if this.state ~= state_active then
-        util.debug("Skip producing event because not connected to the server")
+        util.log("Skip producing event because not connected to the server")
         return
     end
 
@@ -29,7 +29,7 @@ function this.produce_event_from_game(e)
 end
 
 function this.produce_response_event(e_request, e_response)
-    e_response["response_to_event_id"] = e_request["event_id"]
+    e_response["response_to_event_id"] = e_request and e_request["event_id"] or -1
     this.produce_event_from_game(e_response)
 end
 
@@ -203,6 +203,17 @@ function this.connect()
             util.log("Failed to connect: %s", error)
         end
     end, timer.real)
+
+    tes3.im = function (cmd, args)
+        this.produce_response_event(e, {
+            data = {
+                type = "cmd_from_game",
+                cmd = cmd,
+                target = util.ray_test_actor_ref(),
+                args = args
+            }
+        })
+    end
 end
 
 function this.run_connection_maintaining_loop()
@@ -210,7 +221,7 @@ function this.run_connection_maintaining_loop()
     --     return
     -- end
 
-    if this.state == state_disconnected then
+    if this.state == state_disconnected and config.auto_reconnect then
         util.log("Trying to autoconnect")
         this.connect()
     end

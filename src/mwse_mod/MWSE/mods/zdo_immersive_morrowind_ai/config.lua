@@ -3,11 +3,11 @@ local defaultConfig = {
 
     server_host = 'localhost',
     server_port = 18080,
-    auto_reconnect = true,
+    auto_reconnect = false,
 
     debug = false,
 
-    dialog_hide_topics = true,
+    dialog_hide_topics = false,
 
     hud_npc_label_hide_after_sec = 4,
     hud_player_label_hide_after_sec = 2

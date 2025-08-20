@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from util.logger import Logger
 import struct
 from typing import Callable
@@ -45,14 +46,21 @@ class MwseTcpEventBusBackend(AbstractEventBusBackend):
                 self._publish_event_to_client(client, event)
             except Exception as error:
                 logger.error(f"Falied to publish event to client {client.peer_name}: {error}")
+                logger.debug(traceback.format_exc())
 
     def _publish_event_to_client(self, client: _ActiveClient, event: Event):
         msg_json_str = event.model_dump_json()
-        msg_bytes = msg_json_str.encode(encoding=self._config.encoding)
+        try:
+            msg_bytes = msg_json_str.encode(encoding=self._config.encoding, errors='backslashreplace')
 
-        header = struct.pack('>I', len(msg_bytes))
-        client.writer.write(header)
-        client.writer.write(msg_bytes)
+            header = struct.pack('>I', len(msg_bytes))
+            client.writer.write(header)
+            client.writer.write(msg_bytes)
+        except Exception as error:
+            logger.error(f"Falied to encode event to client {client.peer_name}: {error}")
+            logger.debug(traceback.format_exc())
+            logger.debug(f"Source string:\n{msg_json_str}")
+
 
     async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         peername = writer.get_extra_info("peername")
@@ -78,8 +86,10 @@ class MwseTcpEventBusBackend(AbstractEventBusBackend):
                     self._callback_for_event_from_game(event)
                 except Exception as error:
                     logger.error(f"Error happened during event deserialization: {msg} {error}")
+                    logger.debug(traceback.format_exc())
         except Exception as error:
             logger.error(f"Error happened during serving the client: {error}")
+            logger.debug(traceback.format_exc())
         finally:
             self._active_clients.remove(client)
             writer.close()

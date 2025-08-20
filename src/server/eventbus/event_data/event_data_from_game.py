@@ -1,5 +1,5 @@
-from typing import Literal, Optional, Union
-from pydantic import BaseModel
+from typing import Any, Literal, Optional, Union
+from pydantic import BaseModel, Field
 
 from eventbus.data.actor_ref import ActorRef
 from eventbus.data.cell import Cell
@@ -34,6 +34,12 @@ class EventDataFromGame:
         object_id: str
         name: str
         dropped_item_id: int
+
+    class CmdFromGame(BaseModel):
+        type: Literal['cmd_from_game']
+        cmd: str
+        target: Optional[ActorRef] = Field(default=None)
+        args: Optional[Any] = Field(default=None)
 
     class Activated(BaseModel):
         type: Literal['activated']
@@ -169,4 +175,5 @@ EventDataFromGameUnion = Union[
     EventDataFromGame.GameLoaded,
     EventDataFromGame.CombatStarted,
     EventDataFromGame.CombatStopped,
+    EventDataFromGame.CmdFromGame,
 ]

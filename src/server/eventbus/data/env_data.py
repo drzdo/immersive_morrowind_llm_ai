@@ -4,56 +4,55 @@ from pydantic import BaseModel
 
 
 class _AshFallData(BaseModel):
-    vampireWarmEffect: float
-    weatherTemp: float
-    furTemp: float
+    vampireWarmEffect: Optional[float] = None
+    weatherTemp: Optional[float] = None
+    furTemp: Optional[float] = None
     trinketEffects: list[Any]
     insideTent: Optional[bool] = None
-    fireTemp: float
+    fireTemp: Optional[float] = None
     valuesInitialised: bool
-    fireDamageEffect: float
-    hazardTemp: float
+    fireDamageEffect: Optional[float] = None
+    hazardTemp: Optional[float] = None
     woodAxesForHarvesting: list[Any]
-    blightness: float
-    wetness: float
-    resistFrostEffect: float
+    blightness: Optional[float] = None
+    wetness: Optional[float] = None
+    resistFrostEffect: Optional[float] = None
     tentTempMulti: Optional[float] = None
     sacks: list[Any]
-    wetTemp: float
-    wetCoolingRate: float
-    frostDamageEffect: float
-    resistFireEffect: float
+    wetTemp: Optional[float] = None
+    wetCoolingRate: Optional[float] = None
+    frostDamageEffect: Optional[float] = None
+    resistFireEffect: Optional[float] = None
     currentStates: Any
     sunshades: list[Any]
-    foodPoison: float
-    tiredness: float
+    foodPoison: Optional[float] = None
+    tiredness: Optional[float] = None
     faceCovered: bool
-    flu: float
-    vampireColdEffect: float
+    flu: Optional[float] = None
+    vampireColdEffect: Optional[float] = None
     hungerEffect: Optional[float] = None
     stewWarmEffect: Optional[float] = None
-    intWeatherEffect: float
-    lastTimeScriptsUpdated: float
-    hunger: float
+    intWeatherEffect: Optional[float] = None
+    lastTimeScriptsUpdated: Optional[float] = None
+    hunger: Optional[float] = None
     backpacks: Any
-    baseTemp: float
+    baseTemp: Optional[float] = None
     nearCampfire: bool
-    coverageRating: float
-    wetWarmingRate: float
+    coverageRating: Optional[float] = None
+    wetWarmingRate: Optional[float] = None
     survivalEffect: Optional[float] = None
     woodAxesForBackpack: Any
     sunShaded: bool
-    tempLimit: float
-    coverageMulti: float
-    thirst: float
-    dysentery: float
-    warmthRating: float
+    tempLimit: Optional[float] = None
+    coverageMulti: Optional[float] = None
+    thirst: Optional[float] = None
+    dysentery: Optional[float] = None
+    warmthRating: Optional[float] = None
     thirstEffect: Optional[float] = None
-    temp: float
-    torchTemp: float
+    temp: Optional[float] = None
+    torchTemp: Optional[float] = None
     isSheltered: bool
-    sunTemp: float
-
+    sunTemp: Optional[float] = None
 
 class EnvData(BaseModel):
     ashfall: Optional[_AshFallData] = None
