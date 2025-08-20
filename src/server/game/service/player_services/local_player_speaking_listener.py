@@ -29,6 +29,7 @@ class LocalPlayerSpeakingListener:
     async def _handle_event(self, event: Event):
         if event.data.type == 'dialog_text_submit':
             self._player_started_speaking_looking_at = event.data.actor_ref
+            self._player_stopped_speaking_looking_at = event.data.actor_ref
             await self._handle_player_saying_something_to_target(event.data.text)
         elif event.data.type == 'stt_recognition_complete':
             await self._handle_player_saying_something_to_target(event.data.text)

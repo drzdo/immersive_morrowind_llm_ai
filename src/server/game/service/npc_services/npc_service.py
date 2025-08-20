@@ -64,7 +64,7 @@ class NpcService:
             messages=[]
         )
         new_bg = await self._llm_session.send_message(
-            user_text=update
+            user_text=f"""Вот изменения которые тебе нужно сделать с бекграундом персонажа: {update}"""
         )
         logger.info(f"Original NPC background:\n{npc.personality.background}")
         logger.info(f"New NPC background:\n{new_bg}")

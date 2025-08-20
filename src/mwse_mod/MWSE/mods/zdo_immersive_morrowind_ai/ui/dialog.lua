@@ -386,6 +386,63 @@ function this.setup(first_time_loaded)
         priority = -100500,
         unregisterOnLoad = false
     })
+
+    if this.show_talk_ui_reg == nil then
+        this.show_talk_ui_reg = true
+        event.register("keyDown", this.show_talk_ui, { filter = tes3.scanCode.rightCtrl });
+        event.register("keyDown", this.OnEnterKeyDown, { filter = tes3.scanCode.enter });
+    end
+end
+
+function this.OnEnterKeyDown(eventData)
+    if this.inputCapture == nil then
+        return
+    end
+
+    if eventData.isAltDown or eventData.isCtrlDown then
+        local text = this.inputCapture.text;
+        tes3ui.leaveMenuMode();
+        this.InputMenu:destroy();
+
+        this.inputCapture = nil
+        this.InputMenu = nil
+
+        if eventData.isAltDown then
+            eventbus.produce_event_from_game({
+                data = {
+                    type = "dialog_text_submit",
+                    text = text,
+                    actor_ref = util.ray_test_actor_ref()
+                }
+            })
+        end
+    end
+end
+
+function this.show_talk_ui()
+    this.InputMenu = tes3ui.createMenu{ id = "zdoim_TN_id_TextCaptureMenu", fixedFrame = true };
+    tes3ui.enterMenuMode("zdoim_TN_id_TextCaptureMenu");
+    this.InputMenu.alpha = 1.0;
+	local sLabelText = 'alt+enter чтобы отправить, ctrl+enter чтобы отменить';
+
+    local input_label = this.InputMenu:createLabel{ text = sLabelText };
+    input_label.borderBottom = 11;
+	local input_block = this.InputMenu:createBlock{};
+	input_block.width = 500;
+	input_block.autoHeight = true;
+
+    this.inputCapture = input_block:createParagraphInput{};
+    input_block.width = 430;
+    this.inputCapture.width = 430;
+
+    -- local border = input_block:createThinBorder{};
+    -- -- border.width = 300
+    -- border.height = 30;
+    -- -- border.childAlignX = 0.5
+    -- border.childAlignY = 0.5;
+    -- this.inputCapture = border:createTextInput{};
+
+	tes3ui.acquireTextInput(this.inputCapture);
 end
 
 this.delayed_update_topics_token = 1

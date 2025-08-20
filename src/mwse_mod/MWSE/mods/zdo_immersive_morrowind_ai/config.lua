@@ -10,7 +10,7 @@ local defaultConfig = {
     dialog_hide_topics = false,
 
     hud_npc_label_hide_after_sec = 4,
-    hud_player_label_hide_after_sec = 2
+    hud_player_label_hide_after_sec = 2,
 
     -- target_npc_button = {
     -- 	keyCode = tes3.scanCode.v,
@@ -18,6 +18,13 @@ local defaultConfig = {
     -- 	isControlDown = false,
     -- 	isAltDown = true,
     -- },
+
+    speak_button = {
+    	keyCode = tes3.scanCode.v,
+    	isShiftDown = false,
+    	isControlDown = false,
+    	isAltDown = true,
+    }
 }
 
 local config = mwse.loadConfig("zdo_immersive_morrowind_ai", defaultConfig)

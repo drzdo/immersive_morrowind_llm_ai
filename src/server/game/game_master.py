@@ -264,7 +264,8 @@ class GameMaster:
             ]
             for npc in hearing_npcs:
                 all_actors.append(npc.actor_ref)
-            all_actors.remove(actor_to_act)
+            if actor_to_act in all_actors:
+                all_actors.remove(actor_to_act)
 
             # self._npc_speaker_service.turn_to_actor(all_actors, actor_to_act)
             for actor in all_actors:
@@ -296,7 +297,9 @@ class GameMaster:
 
             logger.info(f"NPC {npc_to_act.actor_ref} is going to act")
             other_hearing_npcs = hearing_npcs.copy()
-            other_hearing_npcs.remove(npc_to_act)
+
+            if npc_to_act in other_hearing_npcs:
+                other_hearing_npcs.remove(npc_to_act)
 
             request = NpcBehaviorService.Request(
                 npc=npc_to_act,

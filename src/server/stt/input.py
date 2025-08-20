@@ -40,8 +40,8 @@ class VoiceRecognitionInput:
             await asyncio.sleep(1.0 / 30.0)
 
     def _handle_press(self, key): # type: ignore
-        if key == keyboard.Key.ctrl_r:
-            self.on_start_listening() # type: ignore
+        # if key == keyboard.Key.ctrl_r:
+        #     self.on_start_listening() # type: ignore
 
         if key == keyboard.Key.alt_gr:
             self.on_cancel_listening() # type: ignore

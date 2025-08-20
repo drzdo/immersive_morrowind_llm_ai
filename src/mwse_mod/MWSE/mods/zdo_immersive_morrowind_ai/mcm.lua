@@ -93,6 +93,16 @@ category:createSlider({
 --     })
 -- })
 
+category:createKeyBinder({
+    label = "Write text",
+    description = "Press this button to taslk to NPC",
+    allowCombinations = true,
+    variable = mwse.mcm.createTableVariable({
+        id = "speak_button",
+        table = config
+    })
+})
+
 category = page:createCategory{
     label = "Development"
 }
