@@ -1,5 +1,13 @@
 # Server providing AI features for RPGs
 
+---
+
+This repo is ARCHIVED.
+
+Next evolution of this mod will be here https://github.com/drzdo/zdo-rpg-ai
+
+---
+
 This is an experimental solution of integrating LLMs into the good old Morrowind.
 
 What it does in short:
